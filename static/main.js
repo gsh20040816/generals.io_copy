@@ -14,12 +14,17 @@ const map_drag_click_threshold = 8;
 $(document).ready(function () {
 	x = -1, y = -1;
 	function getMapCellFromPoint(clientX, clientY) {
-		var el = document.elementFromPoint(clientX, clientY);
-		var td = $(el).closest('#map td')[0];
-		if (!td) return null;
-		var match = td.id.match(/^t(\d+)_(\d+)$/);
-		if (!match) return null;
-		return { x: parseInt(match[1]), y: parseInt(match[2]) };
+		if (typeof (n) == "undefined" || typeof (m) == "undefined" || typeof (scale) == "undefined") return null;
+		var cellSize = scale_sizes[scale];
+		var mapLeft = parseFloat($('#map').css('left'));
+		var mapTop = parseFloat($('#map').css('top'));
+		if (!cellSize || isNaN(mapLeft) || isNaN(mapTop)) return null;
+		var docX = clientX + window.pageXOffset;
+		var docY = clientY + window.pageYOffset;
+		var col = Math.floor((docX - (mapLeft - m * cellSize / 2)) / cellSize);
+		var row = Math.floor((docY - (mapTop - n * cellSize / 2)) / cellSize);
+		if (row < 0 || col < 0 || row >= n || col >= m) return null;
+		return { x: row, y: col };
 	}
 	$('body').on('mousedown', function (e) {
 		mapMouseDown = in_game && $(e.target).closest('#game').length > 0;
