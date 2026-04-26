@@ -290,23 +290,32 @@ function keypress(key) {
 
 function getWheelDeltaY(e) {
 	var event = e.originalEvent || e;
-	if (typeof (event.deltaY) == "number" && event.deltaY != 0) return event.deltaY;
+	if (typeof (event.deltaY) == "number" && event.deltaY != 0) {
+		var unit = event.deltaMode == 1 ? 16 : event.deltaMode == 2 ? window.innerHeight : 1;
+		return event.deltaY * unit;
+	}
 	if (typeof (event.wheelDelta) == "number" && event.wheelDelta != 0) return -event.wheelDelta;
-	if (typeof (event.detail) == "number" && event.detail != 0) return event.detail;
+	if (typeof (event.detail) == "number" && event.detail != 0) return event.detail * 16;
 	return 0;
 }
+
+var wheelZoomDelta = 0;
+const wheel_zoom_threshold = 120;
 
 function zoomMapByWheel(e) {
 	if (!in_game) return;
 	var deltaY = getWheelDeltaY(e);
 	if (deltaY == 0) return;
 	if (e.preventDefault) e.preventDefault();
+	wheelZoomDelta += deltaY;
+	if (Math.abs(wheelZoomDelta) < wheel_zoom_threshold) return;
 	var nextScale;
-	if (deltaY > 0) {
+	if (wheelZoomDelta > 0) {
 		nextScale = Math.max(scale - 1, 1);
 	} else {
 		nextScale = Math.min(scale + 1, scale_sizes.length - 1);
 	}
+	wheelZoomDelta = 0;
 	if (nextScale == scale) return;
 	scale = nextScale;
 	if (typeof (localStorage) != "undefined") {
