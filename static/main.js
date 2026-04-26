@@ -3,9 +3,20 @@
 //grid_type[n][m] byte 0~49=army 50~99=city 100~149=generals 150~199=swamp with army 200=empty 201=mountain 202=fog 203=obstacle 204=swamp 205=swamp+fog
 //army_cnt[n][m] int
 
+var mapMouseDown = false;
+var suppressNextMapClick = false;
+var mapDragDistance = 0;
+const map_drag_click_threshold = 4;
+
 $(document).ready(function () {
 	x = -1, y = -1;
 	$('body').on('mousedown', function (e) {
+		mapMouseDown = in_game && $(e.target).closest('#game').length > 0;
+		suppressNextMapClick = false;
+		mapDragDistance = 0;
+		if (mapMouseDown) {
+			e.preventDefault();
+		}
 		x = e.pageX, y = e.pageY;
 	});
 	$('body').on('mousemove', function (e) {
@@ -15,11 +26,26 @@ $(document).ready(function () {
 		} else {
 			w = e.originalEvent.buttons;
 		}
-		X = e.clientX || e.originalEvent.clientX;
-		Y = e.clientY || e.originalEvent.clientY;
-		if (w == 1) {
-			moveMapBy(-x + X, -y + Y);
+		X = e.pageX || e.originalEvent.pageX;
+		Y = e.pageY || e.originalEvent.pageY;
+		if (mapMouseDown && w == 1) {
+			var dx = -x + X, dy = -y + Y;
+			mapDragDistance += Math.abs(dx) + Math.abs(dy);
+			if (mapDragDistance > map_drag_click_threshold) {
+				suppressNextMapClick = true;
+			}
+			moveMapBy(dx, dy);
 			x = e.pageX, y = e.pageY;
+		} else if (w != 1) {
+			mapMouseDown = false;
+		}
+	});
+	$('body').on('mouseup', function () {
+		mapMouseDown = false;
+		if (suppressNextMapClick) {
+			setTimeout(function () {
+				suppressNextMapClick = false;
+			}, 0);
 		}
 	});
 	var touches = [], expected_scale;
@@ -66,7 +92,7 @@ $(document).ready(function () {
 					expected_scale = scale_sizes[scale];
 				} else {
 					var pos, mi = 200;
-					for (var i = 1; i < scale_sizes.length; i++) {
+					for (var i = 0; i < scale_sizes.length; i++) {
 						var t = Math.abs(scale_sizes[i] - expected_scale);
 						if (t < mi) mi = t, pos = i;
 					}
@@ -120,7 +146,7 @@ const dire = [{ x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: 0, y: 1 }];
 const dire_char = ['↑', '↓', '←', '→'];
 const dire_class = ['arrow_u', 'arrow_d', 'arrow_l', 'arrow_r'];
 
-const scale_sizes = [0, 28, 36, 44, 56, 68, 80];
+const scale_sizes = [20, 28, 36, 44, 56, 68, 80];
 const scale_storage_version = '2';
 
 function snapCssPixel(value) {
@@ -311,7 +337,7 @@ function zoomMapByWheel(e) {
 	if (Math.abs(wheelZoomDelta) < wheel_zoom_threshold) return;
 	var nextScale;
 	if (wheelZoomDelta > 0) {
-		nextScale = Math.max(scale - 1, 1);
+		nextScale = Math.max(scale - 1, 0);
 	} else {
 		nextScale = Math.min(scale + 1, scale_sizes.length - 1);
 	}
@@ -326,6 +352,14 @@ function zoomMapByWheel(e) {
 
 function setLobbyScroll(enabled) {
 	$('body').toggleClass('lobby-scroll', enabled);
+}
+
+function suppressDraggedMapClick(e) {
+	if (!suppressNextMapClick) return;
+	suppressNextMapClick = false;
+	e.preventDefault();
+	e.stopPropagation();
+	if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 }
 
 $(document).ready(function () {
@@ -344,6 +378,7 @@ $(document).ready(function () {
 		var wheelEvent = 'onwheel' in document ? 'wheel' : 'mousewheel';
 		game.addEventListener(wheelEvent, zoomMapByWheel, { passive: false });
 		game.addEventListener('DOMMouseScroll', zoomMapByWheel, { passive: false });
+		game.addEventListener('click', suppressDraggedMapClick, true);
 	}
 	if (typeof (localStorage) != "undefined") {
 		var preferredScale = defaultScale();
@@ -353,7 +388,7 @@ $(document).ready(function () {
 		} else if (typeof (localStorage.scale) == "undefined") {
 			localStorage.scale = preferredScale.toString();
 		}
-		scale = Math.max(1, Math.min(scale_sizes.length - 1, parseInt(localStorage.scale) || preferredScale));
+		scale = Math.max(0, Math.min(scale_sizes.length - 1, parseInt(localStorage.scale) || preferredScale));
 	} else {
 		scale = defaultScale();
 	}
