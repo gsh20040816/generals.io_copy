@@ -295,6 +295,10 @@ function zoomMapByWheel(e) {
 	render();
 }
 
+function setLobbyScroll(enabled) {
+	$('body').toggleClass('lobby-scroll', enabled);
+}
+
 $(document).ready(function () {
 	$('body').on('keypress', function (e) {
 		keypress(e.key.toLowerCase());
@@ -321,6 +325,7 @@ $(document).ready(function () {
 });
 
 function render() {
+	setLobbyScroll(false);
 	$('#menu').css('display', 'none');
 	$('#game-starting').css('display', 'none');
 	$('#game').css('display', '');
@@ -476,6 +481,7 @@ function update(data) {
 socket.on('update', update);
 
 socket.on('starting', function () {
+	setLobbyScroll(false);
 	$('#menu').css('display', 'none');
 	$('#game-starting').css('display', '');
 	starting_audio.play();
@@ -596,6 +602,7 @@ $(document).ready(function () {
 	}
 	$('#chat').css('display', '');
 	$('#menu').css('display', '');
+	setLobbyScroll(true);
 	if (typeof (localStorage) != "undefined") {
 		if (typeof (localStorage.username) == "undefined") {
 			localStorage.username = 'Anonymous';
@@ -841,6 +848,7 @@ socket.on('left', function () {
 	socket.emit('join_game_room', { 'room': room_id, 'nickname': nickname });
 	socket.emit('change_game_conf', data);
 	$('#menu').css('display', '');
+	setLobbyScroll(true);
 	$('#game').css('display', 'none');
 	$('#game-leaderboard').css('display', 'none');
 	$('#turn-counter').css('display', 'none');

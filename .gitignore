@@ -91,6 +91,7 @@ env.bak/
 venv.bak/
 
 # Local agent/workspace files
+.codex
 .codex/
 
 # Editor temporary files
@@ -112,4 +113,4 @@ venv.bak/
 .mypy_cache/
 
 # Runtime-generated replay files
-replays/*.json
+replays/
