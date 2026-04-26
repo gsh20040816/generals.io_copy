@@ -734,7 +734,7 @@ socket.on('room_update', function (data) {
 				$('#username-input').val(data.players[i].uid);
 			}
 		}
-		tmp[data.players[i].team] += '<div>';
+		tmp[data.players[i].team] += '<div class="custom-team-player">';
 		if (data.players[i].team) {
 			if (i == 0) {
 				tmp[data.players[i].team] += '<span class="inline-color-block">' + crown_html + '</span>';
@@ -840,6 +840,7 @@ function setTabVal(x, y) {
 		}
 	}
 	$($('#tabs-' + x)[0].children[0]).val(y);
+	if (x == 'move-general-on-capture') syncSwitchTab($('#tabs-' + x)[0], y);
 }
 
 function initTab(x, y, callback) {
@@ -849,17 +850,45 @@ function initTab(x, y, callback) {
 	});
 }
 
+function syncSwitchTab(x, y) {
+	var checked = y == 'On';
+	$(x).toggleClass('switch-on', checked);
+	$(x).toggleClass('switch-off', !checked);
+	$(x).find('input[type="checkbox"]').prop('checked', checked);
+}
+
+function initSwitchTab(x, callback) {
+	syncSwitchTab(x, getTabVal($(x).attr('id').substr(5)));
+	$(x).find('.switch').on('click', function (e) {
+		e.preventDefault();
+		var name = $(x).attr('id').substr(5);
+		setTabVal(name, getTabVal(name) == 'On' ? 'Off' : 'On');
+		callback();
+	});
+}
+
+function updateRoomPageTab() {
+	var current = getTabVal('room-page');
+	$('.room-tab-panel').each(function () {
+		$(this).toggle($(this).attr('data-room-tab') == current);
+	});
+}
+
 $(document).ready(function () {
 	$('.slider-container').each(function () { initRange(this) });
+	$('#tabs-room-page').each(function () {
+		for (var i = 1; i < this.children.length; i++) {
+			initTab(this, this.children[i], updateRoomPageTab);
+		}
+		updateRoomPageTab();
+	});
 	$('#tabs-game-speed').each(function () {
 		for (var i = 1; i < this.children.length; i++) {
 			initTab(this, this.children[i], updateConf);
 		}
 	});
 	$('#tabs-move-general-on-capture').each(function () {
-		for (var i = 1; i < this.children.length; i++) {
-			initTab(this, this.children[i], updateConf);
-		}
+		initSwitchTab(this, updateConf);
 	});
 	$('#tabs-custom-team').each(function () {
 		for (var i = 1; i < this.children.length; i++) {

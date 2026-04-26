@@ -14,13 +14,13 @@ button.inverted:hover{background-color:#006e6e;box-shadow:3px 3px black}
 
 .center{position:absolute;top:50%;left:50%;transform:translateY(-50%) translateX(-50%)}
 .center-tag,.center-tag *{text-align:center;margin-left:auto;margin-right:auto}
-body.lobby-scroll #menu.center{position:relative;top:auto;left:auto;transform:none;width:min(860px, calc(100% - 24px));margin:24px auto 32px}
+body.lobby-scroll #menu.center{position:relative;top:auto;left:auto;transform:none;width:min(1180px, calc(100% - 24px));margin:24px auto 32px}
 .main-title{font-family:Quicksand-Bold;font-size:72px;margin:0 0 10px;text-align:center;text-shadow:2px 2px teal;transition:all .2s ease-in-out;position:relative;display:inline-block}
 .main-title:hover{text-shadow:3px 3px teal}
-.main-title .title-accent{color:transparent;background-clip:text;-webkit-background-clip:text;text-shadow:none;filter:drop-shadow(2px 2px 0 teal)}
-.title-accent-g{background-image:linear-gradient(140deg,#fff 0%,#fff 18%,#f7d98a 25%,#fff8d6 34%,#53d6d6 52%,#087 74%,#fff 100%),repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 1px,rgba(255,255,255,0) 1px 6px)}
-.title-accent-s{background-image:repeating-linear-gradient(45deg,#fff 0 4px,#bff 4px 7px,#0aa 7px 10px,#fff 10px 14px),linear-gradient(180deg,#fff 0%,#7ee 42%,#087 100%)}
-.title-accent-h{background-image:radial-gradient(circle at 28% 30%,#fff 0 7%,rgba(255,255,255,0) 8%),radial-gradient(circle at 68% 62%,#f7d98a 0 6%,rgba(255,255,255,0) 7%),linear-gradient(155deg,#fff 0%,#bff 24%,#0aa 58%,#075 100%)}
+.main-title .title-accent{font:inherit;letter-spacing:inherit;line-height:inherit;color:transparent;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;filter:drop-shadow(2px 2px 0 teal)}
+.title-accent-g{background-image:linear-gradient(140deg,#fff 0%,#fff 22%,#f7d98a 32%,#fff7d0 42%,#7ee 58%,#087 78%,#fff 100%),repeating-linear-gradient(90deg,rgba(255,255,255,.85) 0 1px,rgba(255,255,255,0) 1px 7px)}
+.title-accent-s{background-image:repeating-linear-gradient(45deg,#fff 0 4px,#dff 4px 6px,#8ee 6px 8px,#087 8px 10px,#fff 10px 14px)}
+.title-accent-h{background-image:radial-gradient(circle at 62% 30%,#f7d98a 0 7%,rgba(255,255,255,0) 8%),radial-gradient(circle at 35% 68%,#fff 0 5%,rgba(255,255,255,0) 6%),linear-gradient(155deg,#fff 0%,#cff 24%,#4cc 54%,#087 82%,#fff 100%)}
 #game-link{white-space:nowrap;margin:0;color:teal;background:white;padding:5px 10px}
 .tabs{margin:3px;white-space:nowrap;display:inline-block}
 .background{background-color:white;box-shadow:2px 2px teal}
@@ -34,11 +34,49 @@ body.lobby-scroll #menu.center{position:relative;top:auto;left:auto;transform:no
 #username-input{font-size:28px;padding:7px 34px}
 body.lobby-scroll #username-input{box-sizing:border-box;max-width:100%}
 
-.custom-queue-page-container{background-color:#333;margin-top:0;padding:8px;min-width:680px}
+.room-page-tabs{margin:0 0 10px}
+.room-page-tabs div{min-width:120px;font-size:18px;padding:10px 18px}
+.room-action-bar{position:sticky;bottom:0;z-index:10;margin-top:12px;padding:8px 0 4px;background:#222;text-align:center}
+.room-action-bar #force-start{margin:6px auto}
+.custom-queue-page-container{background-color:#333;margin-top:0;padding:8px;min-width:1120px}
 body.lobby-scroll .custom-queue-page-container{box-sizing:border-box;min-width:0;width:100%;overflow-x:auto}
 body.lobby-scroll .custom-queue-page-container .tabs{max-width:100%;overflow-x:auto}
 .custom-queue-page-container h3{font-size:14px;margin:0 0 4px 0}
 .custom-queue-page-container p{font-size:12px;margin:0}
+.queue-section+.queue-section{margin-top:10px}
+.username-section{padding-top:12px;padding-bottom:12px}
+.username-section #you-are{margin-top:8px}
+.map-token-section{padding-top:10px;padding-bottom:10px}
+.settings-section{padding-top:10px;padding-bottom:12px}
+#team-selection h3{font-size:18px;margin:0 0 3px 0}
+#team-selection #tabs-custom-team{box-sizing:border-box;display:inline-flex;flex-wrap:nowrap;justify-content:center;max-width:100%;overflow-x:visible;white-space:nowrap}
+#team-selection #tabs-custom-team div{box-sizing:border-box;min-width:35px;font-size:12px;flex:0 0 59px}
+#team-selection #tabs-custom-team div:last-child{flex-basis:120px}
+#team-selection .inline-button{font-size:16px;padding:6px}
+#team-selection #teams{margin-top:0}
+#team-selection .custom-team-container{display:inline-block;margin:5px!important;padding:5px 10px 10px;background-color:#222}
+#team-selection .custom-team-container h4{margin:2px;font-family:Quicksand-Bold;border-bottom:1px solid white;padding:2px;font-size:16px}
+#team-selection .custom-team-container p{display:inline;margin:2px;font-size:16px;line-height:17px}
+#team-selection .custom-team-player{height:17px;line-height:17px}
+#team-selection .inline-color-block{width:10px;height:10px;margin:0 2px;vertical-align:middle}
+.modifier-option{width:100%;margin:12px 0 8px}
+.modifier-option-header{width:227px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:2px}
+.custom-queue-slider-header{margin-right:0!important;margin-bottom:0!important;width:130px;text-align:right;font-size:18px!important}
+.modifier-switch-container{margin-left:0;flex-shrink:0;width:95px;display:flex;align-items:center;justify-content:flex-start}
+.modifier-description{margin:2px 0!important;opacity:.75;text-align:center;font-size:14px!important}
+.switch{display:inline-block;position:relative;width:60px;height:34px;margin:5px;user-select:none}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:white;border:1px solid teal;transition:.2s;box-shadow:2px 2px teal;margin:0!important}
+.switch .slider:before{position:absolute;content:"";height:26px;width:26px;left:4px;bottom:4px;background-color:teal;transition:.2s}
+.switch-label{position:absolute;top:50%;left:68px;transform:translateY(-50%);font-family:Quicksand-Bold;font-size:14px;transition:.2s;cursor:pointer;z-index:1;opacity:0;margin:0!important;white-space:nowrap}
+.switch-label:after{content:attr(data-off)}
+.switch-label:before{content:attr(data-on)}
+.on-label,.off-label{color:white}
+.switch input:checked ~ .on-label,.switch input:not(:checked) ~ .off-label{opacity:1}
+.switch input:not(:checked)+.slider{background-color:#f1f1f1;border:1px solid rgba(128,128,128)}
+.switch input:not(:checked)+.slider:before{background-color:rgba(128,128,128,.5)}
+.switch input:checked+.slider:before{transform:translateX(26px)}
+.switch:hover input:not([disabled])+.slider{border-color:#bbb;background-color:#bbb}
 
 .custom-team-container{display:inline-block;margin:5px !important;padding:6px;padding-top:4px;background-color:#222}
 .custom-team-container h4{margin:2px;font-family:Quicksand-Bold;border-bottom:1px solid white;padding:2px;font-size:12px}

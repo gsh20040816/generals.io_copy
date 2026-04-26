@@ -8,8 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="/crown.js"></script>
-    <script src="/main.js?v=46"></script>
-    <link rel="stylesheet" href="/main.css?v=20">
+    <script src="/main.js?v=49"></script>
+    <link rel="stylesheet" href="/main.css?v=29">
     <title>generals</title>
 </head>
 
@@ -32,30 +32,55 @@
     </table>
 
     <div id="menu" class="center center-tag" style="display:none">
-        <div style="margin-bottom:15px;"><input type="text" id="username-input" placeholder="Anonymous" value=""></div>
-        <div class="custom-queue-page-container">
-            <h3>Select your team:</h3>
-            <div id="tabs-custom-team" class="tabs background unselectable">
-                <input type="hidden" value="1">
-                <div class="inline-button inverted">1</div>
-                <div class="inline-button">2</div>
-                <div class="inline-button">3</div>
-                <div class="inline-button">4</div>
-                <div class="inline-button">5</div>
-                <div class="inline-button">6</div>
-                <div class="inline-button">7</div>
-                <div class="inline-button">8</div>
-                <div class="inline-button">9</div>
-                <div class="inline-button">10</div>
-                <div class="inline-button">11</div>
-                <div class="inline-button">12</div>
-                <div class="inline-button">13</div>
-                <div class="inline-button">14</div>
-                <div class="inline-button">15</div>
-                <div class="inline-button">16</div>
-                <div class="inline-button">Spectator</div>
-            </div><br>
-            <div id="teams"></div>
+        <div id="tabs-room-page" class="tabs background unselectable room-page-tabs">
+            <input type="hidden" value="Me">
+            <div class="inline-button inverted">Me</div>
+            <div class="inline-button">Team</div>
+            <div class="inline-button">Settings</div>
+        </div>
+        <div class="custom-queue-page-container queue-section username-section room-tab-panel" data-room-tab="Me">
+            <div><input type="text" id="username-input" placeholder="Anonymous" value=""></div>
+            <div id="you-are" style="display:none">
+                <p style="margin-right:3px;display:inline">You are:</p><span></span>
+            </div>
+        </div>
+        <div class="custom-queue-page-container queue-section map-token-section room-tab-panel" data-room-tab="Settings">
+            <p><input type="text" id="custom-map" placeholder="Custom Map Token" value="" style="margin-top:3px"></p>
+        </div>
+        <div class="custom-queue-page-container queue-section team-section room-tab-panel" data-room-tab="Team">
+            <div id="team-selection">
+                <h3>Select your team:</h3>
+                <div id="tabs-custom-team" class="tabs background unselectable">
+                    <input type="hidden" value="1">
+                    <div class="inline-button inverted">1</div>
+                    <div class="inline-button">2</div>
+                    <div class="inline-button">3</div>
+                    <div class="inline-button">4</div>
+                    <div class="inline-button">5</div>
+                    <div class="inline-button">6</div>
+                    <div class="inline-button">7</div>
+                    <div class="inline-button">8</div>
+                    <div class="inline-button">9</div>
+                    <div class="inline-button">10</div>
+                    <div class="inline-button">11</div>
+                    <div class="inline-button">12</div>
+                    <div class="inline-button">13</div>
+                    <div class="inline-button">14</div>
+                    <div class="inline-button">15</div>
+                    <div class="inline-button">16</div>
+                    <div class="inline-button">Spectator</div>
+                </div>
+                <br>
+                <div id="teams"></div>
+            </div>
+        </div>
+        <div class="custom-queue-page-container queue-section settings-section room-tab-panel" data-room-tab="Settings">
+            <p id="host-true" class="custom-host-message" style="background-color:teal;display:none">
+                You are the Host of this game. Only you can change the game's settings.
+            </p>
+            <p id="host-false" class="custom-host-message" style="background-color:rgba(255,0,0,0.25);display:none">
+                You are not the Host of this game, so you cannot change the game's settings.
+            </p>
             <h3>Game Speed:</h3>
             <div id="tabs-game-speed" class="tabs background unselectable">
                 <input type="hidden" value="1x">
@@ -67,16 +92,28 @@
                 <div class="inline-button">2x</div>
                 <div class="inline-button">3x</div>
                 <div class="inline-button">4x</div>
+                <div class="inline-button">6x</div>
                 <div class="inline-button">8x</div>
+                <div class="inline-button">12x</div>
                 <div class="inline-button">16x</div>
             </div>
-            <h3>Move General on Capture:</h3>
-            <div id="tabs-move-general-on-capture" class="tabs background unselectable">
-                <input type="hidden" value="Off">
-                <div class="inline-button inverted">Off</div>
-                <div class="inline-button">On</div>
+            <div class="modifier-option">
+                <div class="modifier-option-header">
+                    <h3 class="custom-queue-slider-header">Leapfrog:</h3>
+                    <div class="modifier-switch-container">
+                        <div id="tabs-move-general-on-capture" class="switch-tabs switch-off unselectable">
+                            <input type="hidden" value="Off">
+                            <label class="switch center-tag">
+                                <input type="checkbox" readonly>
+                                <span class="slider"></span>
+                                <span class="switch-label off-label" data-off="Off"></span>
+                                <span class="switch-label on-label" data-on="On"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="modifier-description">On capturing an opponent, your general is moved to their generals former location. Your old general becomes a city.</p>
             </div>
-            <p><input type="text" id="custom-map" placeholder="Custom Map Token" value="" style="margin-top:3px"></p>
             <h3>Map Width:</h3>
             <div class="slider-container" id="map-width">
                 <input type="range" step="0.01" min="0" max="1" value="0.5">
@@ -114,16 +151,9 @@
                 <p class="slider-max">high</p>
             </div>
         </div>
-        <p id="host-true" class="custom-host-message" style="background-color:teal;display:none">
-            You are the Host of this game. Only you can change the game's settings.
-        </p>
-        <p id="host-false" class="custom-host-message" style="background-color:rgba(255,0,0,0.25);display:none">
-            You are not the Host of this game, so you cannot change the game's settings.
-        </p>
-        <div id="you-are" style="display:none">
-            <p style="margin-right:3px;display:inline">You are:</p><span></span>
+        <div class="room-action-bar">
+            <button id="force-start" style="display:none"></button>
         </div>
-        <button id="force-start" style="display:none"></button>
     </div>
 
     <div id="game-starting" class="center center-tag" style="display:none">

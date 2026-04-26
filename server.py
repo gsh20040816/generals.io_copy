@@ -108,6 +108,7 @@ def emit_update(sid, data):
 
 
 max_teams = 16
+allowed_game_speeds = {0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16}
 gr_val = {}
 gr_id = {}
 gr_conf = {}
@@ -242,6 +243,13 @@ def chkfloat(x, l, r):
 	return x
 
 
+def chkspeed(x):
+	x = chkfloat(x, 0.25, 16)
+	if x not in allowed_game_speeds:
+		raise ''
+	return x
+
+
 conf_str = {}
 conf_str['width_ratio'] = 'Width option'
 conf_str['height_ratio'] = 'Height option'
@@ -250,7 +258,7 @@ conf_str['mountain_ratio'] = 'Mountain Density option'
 conf_str['swamp_ratio'] = 'Swamp Density option'
 conf_str['speed'] = 'Game Speed option'
 conf_str['custom_map'] = 'Custom Map'
-conf_str['move_general_on_capture'] = 'Move General on Capture option'
+conf_str['move_general_on_capture'] = 'Leapfrog modifier'
 
 
 def getstr(x):
@@ -273,7 +281,7 @@ def on_change_game_conf(data):
 	tmp['city_ratio'] = chkfloat(data['city_ratio'], 0, 1)
 	tmp['mountain_ratio'] = chkfloat(data['mountain_ratio'], 0, 1)
 	tmp['swamp_ratio'] = chkfloat(data['swamp_ratio'], 0, 1)
-	tmp['speed'] = chkfloat(data['speed'], 0.25, 16)
+	tmp['speed'] = chkspeed(data['speed'])
 	tmp['custom_map'] = data['custom_map']
 	tmp['move_general_on_capture'] = chkbool(data.get('move_general_on_capture', False))
 	if request.sid in gr_id and len(tmp['custom_map']) >= 0 and len(tmp['custom_map']) < 100:
