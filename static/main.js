@@ -18,8 +18,7 @@ $(document).ready(function () {
 		X = e.clientX || e.originalEvent.clientX;
 		Y = e.clientY || e.originalEvent.clientY;
 		if (w == 1) {
-			$('#map').css('left', parseInt($('#map').css('left')) - x + X);
-			$('#map').css('top', parseInt($('#map').css('top')) - y + Y);
+			moveMapBy(-x + X, -y + Y);
 			x = e.pageX, y = e.pageY;
 		}
 	});
@@ -31,8 +30,7 @@ $(document).ready(function () {
 	}
 	function handleMove(s) {
 		var x = touches[0].pageX, y = touches[0].pageY, X = s[0].pageX, Y = s[0].pageY;
-		$('#map').css('left', parseInt($('#map').css('left')) - x + X);
-		$('#map').css('top', parseInt($('#map').css('top')) - y + Y);
+		moveMapBy(-x + X, -y + Y);
 	}
 	function dis(a, b) {
 		return Math.sqrt((a.pageX - b.pageX) * (a.pageX - b.pageX) + (a.pageY - b.pageY) * (a.pageY - b.pageY));
@@ -61,8 +59,7 @@ $(document).ready(function () {
 			} else if (s.length == 2) {
 				var x = (touches[0].pageX + touches[1].pageX) / 2, y = (touches[0].pageY + touches[1].pageY) / 2;
 				var X = (s[0].pageX + s[1].pageX) / 2, Y = (s[0].pageY + s[1].pageY) / 2;
-				$('#map').css('left', parseInt($('#map').css('left')) - x + X);
-				$('#map').css('top', parseInt($('#map').css('top')) - y + Y);
+				moveMapBy(-x + X, -y + Y);
 				var dis1 = dis(touches[0], touches[1]), dis2 = dis(s[0], s[1]);
 				expected_scale *= dis2 / dis1;
 				if (expected_scale.toString().toLowerCase().indexOf('n') != -1) {
@@ -123,7 +120,28 @@ const dire = [{ x: -1, y: 0 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: 0, y: 1 }];
 const dire_char = ['↑', '↓', '←', '→'];
 const dire_class = ['arrow_u', 'arrow_d', 'arrow_l', 'arrow_r'];
 
-const scale_sizes = [0, 20, 25, 32, 40, 50, 60];
+const scale_sizes = [0, 28, 36, 44, 56, 68, 80];
+const scale_storage_version = '2';
+
+function snapCssPixel(value) {
+	var dpr = window.devicePixelRatio || 1;
+	return Math.round(value * dpr) / dpr;
+}
+
+function setMapPosition(left, top) {
+	$('#map').css('left', snapCssPixel(left) + 'px');
+	$('#map').css('top', snapCssPixel(top) + 'px');
+}
+
+function moveMapBy(dx, dy) {
+	setMapPosition(parseFloat($('#map').css('left')) + dx, parseFloat($('#map').css('top')) + dy);
+}
+
+function defaultScale() {
+	if ((window.devicePixelRatio || 1) >= 2) return 5;
+	if (window.innerWidth >= 1600 || window.innerHeight >= 1000) return 4;
+	return 3;
+}
 
 var n, m, turn, player, scale, selx, sely, selt, in_game = false;
 var grid_type, army_cnt, have_route = Array(4);
@@ -188,8 +206,10 @@ function init_map(_n, _m, general) {
 	if (!general || general[0] == -1) {
 		general = [n / 2 - 0.5, m / 2 - 0.5];
 	}
-	$('#map').css('left', $(document).width() / 2 + (m / 2 - general[1] - 0.5) * scale_sizes[scale] + 'px');
-	$('#map').css('top', $(document).height() / 2 + (n / 2 - general[0] - 0.5) * scale_sizes[scale] + 'px');
+	setMapPosition(
+		$(document).width() / 2 + (m / 2 - general[1] - 0.5) * scale_sizes[scale],
+		$(document).height() / 2 + (n / 2 - general[0] - 0.5) * scale_sizes[scale]
+	);
 	for (var i = 0; i < n; i++) {
 		for (var j = 0; j < m; j++) {
 			$('#t' + i + '_' + j).on('click', Function("click(" + i + "," + j + ")"));
@@ -317,10 +337,16 @@ $(document).ready(function () {
 		game.addEventListener('DOMMouseScroll', zoomMapByWheel, { passive: false });
 	}
 	if (typeof (localStorage) != "undefined") {
-		if (typeof (localStorage.scale) == "undefined") {
-			localStorage.scale = '3';
+		var preferredScale = defaultScale();
+		if (localStorage.scale_storage_version != scale_storage_version) {
+			localStorage.scale = Math.max(parseInt(localStorage.scale) || preferredScale, preferredScale).toString();
+			localStorage.scale_storage_version = scale_storage_version;
+		} else if (typeof (localStorage.scale) == "undefined") {
+			localStorage.scale = preferredScale.toString();
 		}
-		scale = parseInt(localStorage.scale);
+		scale = Math.max(1, Math.min(scale_sizes.length - 1, parseInt(localStorage.scale) || preferredScale));
+	} else {
+		scale = defaultScale();
 	}
 });
 
