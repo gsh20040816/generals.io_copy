@@ -15,6 +15,12 @@ button.inverted:hover{background-color:#006e6e;box-shadow:3px 3px black}
 .center{position:absolute;top:50%;left:50%;transform:translateY(-50%) translateX(-50%)}
 .center-tag,.center-tag *{text-align:center;margin-left:auto;margin-right:auto}
 body.lobby-scroll #menu.center{position:relative;top:auto;left:auto;transform:none;width:min(860px, calc(100% - 24px));margin:24px auto 32px}
+.main-title{font-family:Quicksand-Bold;font-size:72px;margin:0 0 10px;text-align:center;text-shadow:2px 2px teal;transition:all .2s ease-in-out;position:relative;display:inline-block}
+.main-title:hover{text-shadow:3px 3px teal}
+.main-title .title-accent{color:transparent;background-clip:text;-webkit-background-clip:text;text-shadow:none;filter:drop-shadow(2px 2px 0 teal)}
+.title-accent-g{background-image:linear-gradient(140deg,#fff 0%,#fff 18%,#f7d98a 25%,#fff8d6 34%,#53d6d6 52%,#087 74%,#fff 100%),repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 1px,rgba(255,255,255,0) 1px 6px)}
+.title-accent-s{background-image:repeating-linear-gradient(45deg,#fff 0 4px,#bff 4px 7px,#0aa 7px 10px,#fff 10px 14px),linear-gradient(180deg,#fff 0%,#7ee 42%,#087 100%)}
+.title-accent-h{background-image:radial-gradient(circle at 28% 30%,#fff 0 7%,rgba(255,255,255,0) 8%),radial-gradient(circle at 68% 62%,#f7d98a 0 6%,rgba(255,255,255,0) 7%),linear-gradient(155deg,#fff 0%,#bff 24%,#0aa 58%,#075 100%)}
 #game-link{white-space:nowrap;margin:0;color:teal;background:white;padding:5px 10px}
 .tabs{margin:3px;white-space:nowrap;display:inline-block}
 .background{background-color:white;box-shadow:2px 2px teal}
