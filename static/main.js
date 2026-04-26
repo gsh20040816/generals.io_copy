@@ -4,16 +4,30 @@
 //army_cnt[n][m] int
 
 var mapMouseDown = false;
+var mapDragging = false;
 var suppressNextMapClick = false;
-var mapDragDistance = 0;
-const map_drag_click_threshold = 4;
+var mapMouseStartX = 0;
+var mapMouseStartY = 0;
+var mapMouseStartCell = null;
+const map_drag_click_threshold = 8;
 
 $(document).ready(function () {
 	x = -1, y = -1;
+	function getMapCellFromPoint(clientX, clientY) {
+		var el = document.elementFromPoint(clientX, clientY);
+		var td = $(el).closest('#map td')[0];
+		if (!td) return null;
+		var match = td.id.match(/^t(\d+)_(\d+)$/);
+		if (!match) return null;
+		return { x: parseInt(match[1]), y: parseInt(match[2]) };
+	}
 	$('body').on('mousedown', function (e) {
 		mapMouseDown = in_game && $(e.target).closest('#game').length > 0;
+		mapDragging = false;
 		suppressNextMapClick = false;
-		mapDragDistance = 0;
+		mapMouseStartX = e.pageX;
+		mapMouseStartY = e.pageY;
+		mapMouseStartCell = getMapCellFromPoint(e.clientX, e.clientY);
 		if (mapMouseDown) {
 			e.preventDefault();
 		}
@@ -30,18 +44,30 @@ $(document).ready(function () {
 		Y = e.pageY || e.originalEvent.pageY;
 		if (mapMouseDown && w == 1) {
 			var dx = -x + X, dy = -y + Y;
-			mapDragDistance += Math.abs(dx) + Math.abs(dy);
-			if (mapDragDistance > map_drag_click_threshold) {
+			var totalDx = X - mapMouseStartX, totalDy = Y - mapMouseStartY;
+			if (!mapDragging && totalDx * totalDx + totalDy * totalDy > map_drag_click_threshold * map_drag_click_threshold) {
+				mapDragging = true;
 				suppressNextMapClick = true;
 			}
-			moveMapBy(dx, dy);
+			if (mapDragging) {
+				moveMapBy(dx, dy);
+			}
 			x = e.pageX, y = e.pageY;
 		} else if (w != 1) {
 			mapMouseDown = false;
+			mapDragging = false;
 		}
 	});
-	$('body').on('mouseup', function () {
+	$('body').on('mouseup', function (e) {
+		var shouldClickCell = mapMouseDown && !mapDragging;
+		var cell = shouldClickCell ? getMapCellFromPoint(e.clientX, e.clientY) : null;
 		mapMouseDown = false;
+		mapDragging = false;
+		if (cell && mapMouseStartCell && cell.x == mapMouseStartCell.x && cell.y == mapMouseStartCell.y) {
+			suppressNextMapClick = true;
+			click(cell.x, cell.y);
+		}
+		mapMouseStartCell = null;
 		if (suppressNextMapClick) {
 			setTimeout(function () {
 				suppressNextMapClick = false;
@@ -176,7 +202,7 @@ var route;
 var room_id = '', client_id, ready_state = 0, lost;
 var max_teams = 16;
 
-var chat_focus = false, is_team = false, starting_audio;
+var chat_focus = false, is_team = false, starting_audio, surrender_requested = false;
 
 var is_replay = false, replay_id = false, replay_data = [], rcnt = 0, cur_turn = 0, is_autoplaying = false, autoplay_speed = 1;
 
@@ -236,11 +262,6 @@ function init_map(_n, _m, general) {
 		$(document).width() / 2 + (m / 2 - general[1] - 0.5) * scale_sizes[scale],
 		$(document).height() / 2 + (n / 2 - general[0] - 0.5) * scale_sizes[scale]
 	);
-	for (var i = 0; i < n; i++) {
-		for (var j = 0; j < m; j++) {
-			$('#t' + i + '_' + j).on('click', Function("click(" + i + "," + j + ")"));
-		}
-	}
 }
 
 function click(x, y, q) {
@@ -276,7 +297,11 @@ function keypress(key) {
 		}
 	}
 	else if (in_game) {
-		if (key == 'z') {
+		if (key == 27) {
+			if (!chat_focus && !lost && !surrender_requested) {
+				$('#surrender-alert').css('display', '');
+			}
+		} else if (key == 'z') {
 			selt = 3 - selt;
 			render();
 		} else if (key == 'w' || key == 38) {
@@ -360,6 +385,15 @@ function suppressDraggedMapClick(e) {
 	e.preventDefault();
 	e.stopPropagation();
 	if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+}
+
+function showSurrenderedStatus() {
+	$($('#status-alert').children()[0].children[0]).html('Game Over');
+	$($('#status-alert').children()[0].children[1]).html('<span>You surrendered.</span>');
+	$($('#status-alert').children()[0].children[1]).css('display', '');
+	$($('#status-alert').children()[0].children[2]).css('display', '');
+	$('#status-alert').css('display', '');
+	lost = true;
 }
 
 $(document).ready(function () {
@@ -525,7 +559,7 @@ function update(data) {
 	$('#turn-counter').html('Turn ' + Math.floor(data.turn / 2) + (data.turn % 2 == 1 ? '.' : ''));
 	$('#turn-counter').css('display', '');
 	if (is_replay) return;
-	if (typeof (data.kills[client_id]) != 'undefined') {
+	if (typeof (data.kills[client_id]) != 'undefined' && !surrender_requested) {
 		$($('#status-alert').children()[0].children[0]).html('Game Over');
 		$($('#status-alert').children()[0].children[1]).html('<span>You were defeated by <span style="font-family: Quicksand-Bold;">' + htmlescape(data.kills[client_id]) + '</span>.</span>');
 		$($('#status-alert').children()[0].children[1]).css('display', '');
@@ -588,6 +622,8 @@ socket.on('init_map', function (data) {
 	init_map(data.n, data.m, data.general);
 	in_game = true;
 	lost = false;
+	surrender_requested = false;
+	$('#surrender-alert').css('display', 'none');
 	console.log(data);
 	for (var i = 0; i < data.player_ids.length; i++) {
 		if (data.player_ids[i] == client_id) {
@@ -953,9 +989,11 @@ socket.on('left', function () {
 	$('#turn-counter').css('display', 'none');
 	$('#chat-messages-container').html('');
 	$('#status-alert').css('display', 'none');
+	$('#surrender-alert').css('display', 'none');
 	ready_state = 0;
 	in_game = false;
 	replay_id = false;
+	surrender_requested = false;
 });
 
 $(document).ready(function () {
@@ -1007,4 +1045,15 @@ $(document).ready(function () {
 		window.open('/replays/' + replay_id, '_blank');
 	});
 	$($('#status-alert').children()[0].children[8]).on('click', _exit);
+	$($('#surrender-alert').children()[0].children[2]).on('click', function (e) {
+		if (surrender_requested) return;
+		surrender_requested = true;
+		socket.emit('surrender');
+		$('#surrender-alert').css('display', 'none');
+		clear_queue();
+		showSurrenderedStatus();
+	});
+	$($('#surrender-alert').children()[0].children[4]).on('click', function (e) {
+		$('#surrender-alert').css('display', 'none');
+	});
 });

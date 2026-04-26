@@ -99,6 +99,12 @@ def on_clear_queue():
 		game_instance[game_uid[request.sid]].pop_queue(request.sid)
 
 
+@socketio.on('surrender')
+def on_surrender():
+	if request.sid in game_uid:
+		game_instance[game_uid[request.sid]].surrender(request.sid)
+
+
 def emit_init_map(sid, data):
 	socketio.emit('init_map', data, room='sid_' + sid)
 

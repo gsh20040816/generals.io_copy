@@ -8,8 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="/crown.js"></script>
-    <script src="/main.js?v=49"></script>
-    <link rel="stylesheet" href="/main.css?v=32">
+    <script src="/main.js?v=53"></script>
+    <link rel="stylesheet" href="/main.css?v=33">
     <title>generals</title>
 </head>
 
@@ -180,6 +180,19 @@
             <button class="inverted">Play Again</button><br>
             <button class="inverted" style="display:none">Watch Replay</button><br>
             <button class="inverted">Exit</button>
+        </center>
+    </div>
+
+    <div class="alert center" id="surrender-alert" style="display:none">
+        <center>
+            <h1 style="margin:15px 0px 5px;text-align:center;font-family:Quicksand-Bold;white-space:nowrap">
+                Surrender?
+            </h1>
+            <p style="text-align:center;margin-bottom:0">
+                Your land will turn neutral after 50 turns.
+            </p>
+            <button class="small inverted" style="margin-top:16px">Confirm Surrender</button><br>
+            <button class="inverted">Cancel</button>
         </center>
     </div>
 

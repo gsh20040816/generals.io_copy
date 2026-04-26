@@ -7,6 +7,7 @@ max_city_ratio = 0.04
 max_swamp_ratio = 0.16
 max_mountain_ratio = 0.24
 left_game = 52
+surrender_delay_turns = 100
 
 
 def chkconn(grid_type, n, m):
@@ -119,6 +120,7 @@ class Game:
 		self.army_cnt_lst = [[] for i in player_ids]
 		self.deadorder = [0] * len(player_ids)
 		self.deadcount = 0
+		self.surrender_turn = [0] * len(player_ids)
 		self.chat_message = chat_message
 		self.gid = gid
 		self.lock = threading.RLock()
@@ -364,6 +366,8 @@ class Game:
 
 	def add_move(self, player, x, y, dx, dy, half):
 		player = self.player_ids_rev[player]
+		if self.pstat[player] == left_game:
+			return
 		self.lock.acquire()
 		self.pmove[player].append((x, y, dx, dy, half))
 		self.lock.release()
@@ -381,7 +385,33 @@ class Game:
 			self.pmove[player].pop()
 		self.lock.release()
 
+	def surrender(self, sid):
+		player = self.player_ids_rev[sid]
+		self.lock.acquire()
+		if self.pstat[player] == 0 and self.surrender_turn[player] == 0:
+			self.surrender_turn[player] = self.turn + surrender_delay_turns
+			self.pmove[player] = []
+			self.pstat[player] = left_game
+			self.deadcount += 1
+			self.deadorder[player] = self.deadcount
+			self.spec[player] = True
+			self.send_system_message(self.names[player] + ' will surrender in ' + str(surrender_delay_turns // 2) + ' turns.')
+		self.lock.release()
+
+	def apply_surrender(self, player):
+		p = player + 1
+		for i in range(self.n):
+			for j in range(self.m):
+				if self.owner[i][j] == p:
+					self.owner[i][j] = 0
+					if self.grid_type[i][j] == -2:
+						self.grid_type[i][j] = -1
+		self.generals[player] = (-1, -1)
+		self.surrender_turn[player] = 0
+		self.send_system_message(self.names[player] + ' surrendered.')
+
 	def kill(self, a, b):
+		was_alive = self.pstat[b - 1] != left_game
 		b_general = self.generals[b - 1] if b > 0 else (-1, -1)
 		for i in range(self.n):
 			for j in range(self.m):
@@ -397,9 +427,11 @@ class Game:
 			self.grid_type[b_general[0]][b_general[1]] = -2
 			self.generals[a - 1] = b_general
 		self.generals[b - 1] = (-1, -1)
-		self.pstat[b - 1] = left_game
-		self.deadcount += 1
-		self.deadorder[b - 1] = self.deadcount
+		self.surrender_turn[b - 1] = 0
+		if was_alive:
+			self.pstat[b - 1] = left_game
+			self.deadcount += 1
+			self.deadorder[b - 1] = self.deadcount
 		self.spec[b - 1] = True
 		if a > 0 and b > 0:
 			self.recentkills[self.md5(self.player_ids[b - 1])] = self.names[a - 1]
@@ -448,6 +480,8 @@ class Game:
 					if self.owner[i][j] > 0:
 						self.army_cnt[i][j] += 1
 		for p in range(self.pcnt):
+			if self.surrender_turn[p] and self.turn >= self.surrender_turn[p]:
+				self.apply_surrender(p)
 			if self.pstat[p]:
 				self.pstat[p] = min(self.pstat[p] + 1, left_game)
 				if self.pstat[p] == left_game - 1:
