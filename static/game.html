@@ -8,8 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="/crown.js"></script>
-    <script src="/main.js?v=54"></script>
-    <link rel="stylesheet" href="/main.css?v=33">
+    <script src="/main.js?v=56"></script>
+    <link rel="stylesheet" href="/main.css?v=34">
     <title>generals</title>
 </head>
 
@@ -40,8 +40,28 @@
         </div>
         <div class="custom-queue-page-container queue-section username-section room-tab-panel" data-room-tab="Me">
             <div><input type="text" id="username-input" placeholder="Anonymous" value=""></div>
-            <div id="you-are" style="display:none">
-                <p style="margin-right:3px;display:inline">You are:</p><span></span>
+            <div id="you-are" class="color-picker-section">
+                <p>Select Color:</p>
+                <center>
+                    <div id="color-picker" class="color-picker">
+                        <span class="supporter-circle c1" data-color="1"></span>
+                        <span class="supporter-circle c2" data-color="2"></span>
+                        <span class="supporter-circle c3" data-color="3"></span>
+                        <span class="supporter-circle c4" data-color="4"></span>
+                        <span class="supporter-circle c5" data-color="5"></span>
+                        <span class="supporter-circle c6" data-color="6"></span>
+                        <span class="supporter-circle c7" data-color="7"></span>
+                        <span class="supporter-circle c8" data-color="8"></span>
+                        <span class="supporter-circle c9" data-color="9"></span>
+                        <span class="supporter-circle c10" data-color="10"></span>
+                        <span class="supporter-circle c11" data-color="11"></span>
+                        <span class="supporter-circle c12" data-color="12"></span>
+                        <span class="supporter-circle c13" data-color="13"></span>
+                        <span class="supporter-circle c14" data-color="14"></span>
+                        <span class="supporter-circle c15" data-color="15"></span>
+                        <span class="supporter-circle c16" data-color="16"></span>
+                    </div>
+                </center>
             </div>
         </div>
         <div class="custom-queue-page-container queue-section map-token-section room-tab-panel" data-room-tab="Settings">

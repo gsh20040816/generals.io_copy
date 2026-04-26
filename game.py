@@ -101,6 +101,7 @@ class Game:
 		self.speed = game_conf['speed']
 		self.names = game_conf['player_names']
 		self.team = game_conf['player_teams']
+		self.colors = game_conf.get('player_colors', [i + 1 for i in range(len(player_ids))])
 		self.rpcnt = 0
 		for i in self.team:
 			if i:
@@ -133,7 +134,7 @@ class Game:
 			self.genmap()
 		self.sel_generals()
 		for i in range(self.pcnt):
-			emit_init_map(self.player_ids[i], {'n': self.n, 'm': self.m, 'player_ids': rplayer_ids, 'general': self.generals[i]})
+			emit_init_map(self.player_ids[i], {'n': self.n, 'm': self.m, 'player_ids': rplayer_ids, 'player_colors': self.colors, 'general': self.generals[i]})
 
 	def send_message(self, sid, data):
 		id = self.player_ids_rev[sid]
@@ -141,9 +142,9 @@ class Game:
 		if data['team']:
 			for i in range(self.pcnt):
 				if self.team[i] == self.team[id]:
-					self.chat_message(self.player_ids[i], 'sid', uid, id + 1, data['text'], True)
+					self.chat_message(self.player_ids[i], 'sid', uid, self.colors[id], data['text'], True)
 		else:
-			self.chat_message(self.gid, 'room', uid, id + 1, data['text'])
+			self.chat_message(self.gid, 'room', uid, self.colors[id], data['text'])
 
 	def send_system_message(self, text):
 		self.chat_message(self.gid, 'room', '', 0, text)
@@ -296,7 +297,7 @@ class Game:
 			elif self.pstat[i]:
 				cl = 'afk'
 			if self.team[i]:
-				leaderboard.append({'team': self.team[i], 'uid': self.names[i], 'army': pl_v[i][0], 'land': pl_v[i][1], 'class_': cl, 'dead': self.deadorder[i], 'id': i + 1})
+				leaderboard.append({'team': self.team[i], 'uid': self.names[i], 'army': pl_v[i][0], 'land': pl_v[i][1], 'class_': cl, 'dead': self.deadorder[i], 'id': i + 1, 'color': self.colors[i]})
 		for p in range(-1, self.pcnt):
 			if p == -1 or self.watching[p]:
 				rt = [[0 for j in range(self.m)] for i in range(self.n)]

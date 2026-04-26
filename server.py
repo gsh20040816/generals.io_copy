@@ -114,11 +114,23 @@ def emit_update(sid, data):
 
 
 max_teams = 16
+max_colors = 16
 allowed_game_speeds = {0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8, 12, 16}
 gr_val = {}
 gr_id = {}
 gr_conf = {}
 gr_players = {}
+
+
+def first_available_color(gid):
+	used = {}
+	if gid in gr_players:
+		for i in gr_players[gid]:
+			used[i[4]] = True
+	for i in range(1, max_colors + 1):
+		if i not in used:
+			return i
+	return 0
 
 
 def join_game_room(sid, uid, gid):
@@ -135,7 +147,7 @@ def join_game_room(sid, uid, gid):
 		if tcnt[i] < mi:
 			mi = tcnt[i]
 			mp = i
-	gr_players[gid].append([sid, uid, mp, False])
+	gr_players[gid].append([sid, uid, mp, False, first_available_color(gid)])
 
 
 def leave_game_room(sid, gid):
@@ -164,7 +176,7 @@ def gen_game_conf(gid):
 	pl = []
 	cnt = 0
 	for i in gr_players[gid]:
-		pl.append({'sid': md5(i[0]), 'uid': i[1], 'team': i[2], 'ready': bool(i[3] and i[2])})
+		pl.append({'sid': md5(i[0]), 'uid': i[1], 'team': i[2], 'ready': bool(i[3] and i[2]), 'color': i[4]})
 		if i[2] and i[3]:
 			cnt += 1
 	need = get_req(gr_players[gid])
@@ -217,6 +229,23 @@ def on_change_team(data):
 		emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
 		teamname = 'the spectators' if data['team'] == 0 else 'team ' + str(data['team'])
 		send_system_message(ioroom, nickname + ' joined ' + teamname + '.')
+
+
+@socketio.on('change_color')
+def on_change_color(data):
+	data['color'] = int(data['color'])
+	if request.sid in gr_id and data['color'] >= 1 and data['color'] <= max_colors:
+		gid = gr_id[request.sid]
+		ioroom = getval(gid)
+		for i in gr_players[gid]:
+			if i[0] != request.sid and i[4] == data['color']:
+				emit('room_update', gen_game_conf(gid), room='sid_' + request.sid)
+				return
+		for i in gr_players[gid]:
+			if i[0] == request.sid:
+				i[4] = data['color']
+				break
+		emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
 
 
 @socketio.on('change_ready')
@@ -344,13 +373,16 @@ def start_game(gid):
 	player_ids = []
 	player_teams = []
 	player_names = []
+	player_colors = []
 	for i in grp:
 		player_sids.append(i[0])
 		player_ids.append(md5(i[0]))
 		player_names.append(i[1])
 		player_teams.append(i[2])
+		player_colors.append(i[4])
 	grc['player_names'] = player_names
 	grc['player_teams'] = player_teams
+	grc['player_colors'] = player_colors
 	socketio.emit('starting', {}, room='game_' + gid)
 	game = Game(grc, emit_update, emit_init_map, player_sids, player_ids, chat_message, gid, md5, end_game)
 	game.start_game(socketio)
@@ -385,7 +417,7 @@ def on_send_message(data):
 		ioroom = getval(gid)
 		for i in range(len(gr_players[gid])):
 			if gr_players[gid][i][0] == request.sid:
-				color = i + 1
+				color = gr_players[gid][i][4]
 				uid = gr_players[gid][i][1]
 		chat_message(ioroom, 'room', uid, color, data['text'])
 

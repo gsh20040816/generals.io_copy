@@ -47,6 +47,13 @@ body.lobby-scroll .custom-queue-page-container .tabs:not(#tabs-custom-team){max-
 .queue-section+.queue-section{margin-top:10px}
 .username-section{padding-top:12px;padding-bottom:12px}
 .username-section #you-are{margin-top:8px}
+.color-picker-section p{font-size:14px;margin:0 0 5px}
+.color-picker{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;max-width:490px;margin:5px auto}
+.supporter-circle{display:inline-block;width:24px;height:24px;margin:0;border-radius:50%;box-shadow:var(--player-color) 0 0 0 15px inset;cursor:pointer;transition:opacity .15s ease-in-out,box-shadow .15s ease-in-out,transform .15s ease-in-out}
+.supporter-circle:hover{transform:scale(1.08)}
+.supporter-circle.selected{background-color:transparent!important;box-shadow:var(--player-color) 0 0 0 3px inset}
+.supporter-circle.taken{cursor:not-allowed;opacity:.25}
+.supporter-circle.taken:hover{transform:none}
 .map-token-section{padding-top:10px;padding-bottom:10px}
 .settings-section{padding-top:10px;padding-bottom:12px}
 #team-selection h3{font-size:18px;margin:0 0 3px 0}
@@ -92,7 +99,7 @@ body.lobby-scroll .custom-queue-page-container .tabs:not(#tabs-custom-team){max-
 .slider-container .slider-max{position:absolute;right:5px;bottom:5px}
 .slider-container input[type='range']{margin:0;background-color:transparent;width:100%}
 
-#you-are p{font-size:12px}
+#you-are p{font-size:14px}
 
 #game-leaderboard{position:fixed;top:0;right:0;z-index:25;background:black}
 #game-leaderboard:hover{cursor:pointer}
@@ -142,24 +149,24 @@ input[type=range]{-webkit-appearance:none;margin:10px 0;width:100%}input[type=ra
 .s5{width:68px;height:68px;max-width:68px;max-height:68px;min-width:68px;min-height:68px;font-size:20px;background-size:54px 54px}
 .s6{width:80px;height:80px;max-width:80px;max-height:80px;min-width:80px;min-height:80px;font-size:22px;background-size:64px 64px}
 
-.c0{background-color:gray!important}
-.c1{background-color:red!important;fill:red!important}
-.c2{background-color:green!important}
-.c3{background-color:blue!important}
-.c4{background-color:purple!important}
-.c5{background-color:teal!important}
-.c6{background-color:#004600!important}
-.c7{background-color:orange!important}
-.c8{background-color:brown!important}
-.c9{background-color:maroon!important}
-.c10{background-color:#ec7063!important}
-.c11{background-color:#935116!important}
-.c12{background-color:#1a5276!important}
-.c13{background-color:#2ecc71!important}
-.c14{background-color:#641e16!important}
-.c15{background-color:#b7950b!important}
-.c16{background-color:#ff5733!important}
-.c17{background-color:#f321dd!important}
+.c0{--player-color:gray;background-color:gray!important;fill:gray!important}
+.c1{--player-color:red;background-color:red!important;fill:red!important}
+.c2{--player-color:rgb(39,146,255);background-color:rgb(39,146,255)!important;fill:rgb(39,146,255)!important}
+.c3{--player-color:green;background-color:green!important;fill:green!important}
+.c4{--player-color:teal;background-color:teal!important;fill:teal!important}
+.c5{--player-color:rgb(250,140,1);background-color:rgb(250,140,1)!important;fill:rgb(250,140,1)!important}
+.c6{--player-color:rgb(240,50,230);background-color:rgb(240,50,230)!important;fill:rgb(240,50,230)!important}
+.c7{--player-color:purple;background-color:purple!important;fill:purple!important}
+.c8{--player-color:rgb(155,1,1);background-color:rgb(155,1,1)!important;fill:rgb(155,1,1)!important}
+.c9{--player-color:rgb(179,172,50);background-color:rgb(179,172,50)!important;fill:rgb(179,172,50)!important}
+.c10{--player-color:rgb(154,94,36);background-color:rgb(154,94,36)!important;fill:rgb(154,94,36)!important}
+.c11{--player-color:rgb(16,49,255);background-color:rgb(16,49,255)!important;fill:rgb(16,49,255)!important}
+.c12{--player-color:rgb(89,76,165);background-color:rgb(89,76,165)!important;fill:rgb(89,76,165)!important}
+.c13{--player-color:rgb(133,169,28);background-color:rgb(133,169,28)!important;fill:rgb(133,169,28)!important}
+.c14{--player-color:rgb(255,102,104);background-color:rgb(255,102,104)!important;fill:rgb(255,102,104)!important}
+.c15{--player-color:rgb(180,127,202);background-color:rgb(180,127,202)!important;fill:rgb(180,127,202)!important}
+.c16{--player-color:rgb(180,153,113);background-color:rgb(180,153,113)!important;fill:rgb(180,153,113)!important}
+.c17{--player-color:#f321dd;background-color:#f321dd!important;fill:#f321dd!important}
 
 #map{position:absolute;transform:translate3d(-50%,-50%,0);z-index:1}
 #map table{border-spacing:0;table-layout:fixed}

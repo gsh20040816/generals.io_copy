@@ -200,8 +200,13 @@ function defaultScale() {
 	return 3;
 }
 
+function colorForPlayer(x) {
+	return typeof (player_colors[x]) == 'undefined' ? x : player_colors[x];
+}
+
 var n, m, turn, player, scale, selx, sely, selt, in_game = false;
 var grid_type, army_cnt, have_route = Array(4);
+var player_colors = [];
 var route;
 
 var room_id = '', client_id, ready_state = 0, lost;
@@ -453,13 +458,13 @@ function render() {
 			var cls = 's' + scale, txt = '';
 			if (grid_type[i][j] < 200) {
 				if (grid_type[i][j] < 50) {
-					cls += ' c' + grid_type[i][j];
+					cls += ' c' + colorForPlayer(grid_type[i][j]);
 				} else if (grid_type[i][j] < 100) {
-					cls += ' c' + (grid_type[i][j] - 50) + ' city';
+					cls += ' c' + colorForPlayer(grid_type[i][j] - 50) + ' city';
 				} else if (grid_type[i][j] < 150) {
-					cls += ' c' + (grid_type[i][j] - 100) + ' general';
+					cls += ' c' + colorForPlayer(grid_type[i][j] - 100) + ' general';
 				} else if (grid_type[i][j] < 200) {
-					cls += ' c' + (grid_type[i][j] - 150) + ' swamp';
+					cls += ' c' + colorForPlayer(grid_type[i][j] - 150) + ' swamp';
 				}
 				if (grid_type[i][j] % 50 == player) {
 					cls += ' selectable';
@@ -557,7 +562,7 @@ function update(data) {
 	})
 	var th = '<tr><td>Team</td><td>Player</td><td>Army</td><td>Land</td></tr>';
 	for (var i = 0; i < lb.length; i++) {
-		th += '<tr class="' + lb[i].class_ + '"><td>' + lb[i].team + '</td><td class="leaderboard-name c' + lb[i].id + '">' + htmlescape(lb[i].uid) + '</td><td>' + lb[i].army + '</td><td>' + lb[i].land + '</td></tr>';
+		th += '<tr class="' + lb[i].class_ + '"><td>' + lb[i].team + '</td><td class="leaderboard-name c' + (lb[i].color || lb[i].id) + '">' + htmlescape(lb[i].uid) + '</td><td>' + lb[i].army + '</td><td>' + lb[i].land + '</td></tr>';
 	}
 	$('#game-leaderboard').html(th);
 	$('#game-leaderboard').css('display', '');
@@ -625,6 +630,7 @@ socket.on('set_id', function (data) {
 
 socket.on('init_map', function (data) {
 	init_map(data.n, data.m, data.general);
+	player_colors = [0].concat(data.player_colors || []);
 	in_game = true;
 	lost = false;
 	surrender_requested = false;
@@ -734,6 +740,27 @@ socket.on('connect', function () {
 	}
 });
 
+function crownForColor(color) {
+	return crown_html.replace(/c1/g, 'c' + color);
+}
+
+function syncColorPicker(players) {
+	var ownColor = 0, usedByOthers = {};
+	for (var i = 0; i < players.length; i++) {
+		if (players.length == 1 || players[i].sid == client_id) {
+			ownColor = players[i].color;
+		} else {
+			usedByOthers[players[i].color] = true;
+		}
+	}
+	$('#color-picker .supporter-circle').each(function () {
+		var color = parseInt($(this).attr('data-color'));
+		$(this).toggleClass('selected', color == ownColor);
+		$(this).toggleClass('taken', !!usedByOthers[color]);
+		$(this).attr('title', usedByOthers[color] ? 'Taken' : '');
+	});
+}
+
 socket.on('room_update', function (data) {
 	setRangeVal('map-height', data.height_ratio);
 	setRangeVal('map-width', data.width_ratio);
@@ -757,16 +784,15 @@ socket.on('room_update', function (data) {
 	else $('#custom-map').attr('disabled', '');
 	$('#host-' + (isHost).toString()).css('display', '');
 	$('#host-' + (!isHost).toString()).css('display', 'none');
+	syncColorPicker(data.players);
 	for (var i = 0; i < data.players.length; i++) {
 		if (data.players[i].sid == client_id) {
 			setTabVal('custom-team', data.players[i].team ? data.players[i].team.toString() : 'Spectator');
+			$('#you-are').css('display', '');
 			if (data.players[i].team) {
-				$('#you-are').css('display', '');
 				$('#you-are-2').css('display', '');
-				$($('#you-are')[0].children[1]).attr('class', 'inline-color-block c' + (i + 1));
-				$($('#you-are-2')[0].children[1]).attr('class', 'inline-color-block c' + (i + 1));
+				$($('#you-are-2')[0].children[1]).attr('class', 'inline-color-block c' + data.players[i].color);
 			} else {
-				$('#you-are').css('display', 'none');
 				$('#you-are-2').css('display', 'none');
 			}
 			if (data.players[i].uid == 'Anonymous') {
@@ -778,9 +804,9 @@ socket.on('room_update', function (data) {
 		tmp[data.players[i].team] += '<div class="custom-team-player">';
 		if (data.players[i].team) {
 			if (i == 0) {
-				tmp[data.players[i].team] += '<span class="inline-color-block">' + crown_html + '</span>';
+				tmp[data.players[i].team] += '<span class="inline-color-block">' + crownForColor(data.players[i].color) + '</span>';
 			} else {
-				tmp[data.players[i].team] += '<span class="inline-color-block c' + (i + 1) + '"></span>';
+				tmp[data.players[i].team] += '<span class="inline-color-block c' + data.players[i].color + '"></span>';
 			}
 		}
 		tmp[data.players[i].team] += '<p>';
@@ -939,6 +965,10 @@ $(document).ready(function () {
 	$('#force-start').on('click', function () {
 		ready_state ^= 1;
 		socket.emit('change_ready', { ready: ready_state });
+	});
+	$('#color-picker .supporter-circle').on('click', function () {
+		if ($(this).hasClass('taken')) return;
+		socket.emit('change_color', { color: parseInt($(this).attr('data-color')) });
 	});
 	function changeUsername() {
 		var tmp = $('#username-input').val();
