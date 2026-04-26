@@ -5,7 +5,14 @@
     <meta name="viewport"
         content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="/main.css?v=34">
+    <script>
+        window.GENERALS_BASE_URL = {{ base_url|tojson }};
+        function withBaseUrl(path) {
+            if (path.charAt(0) != '/') path = '/' + path;
+            return (window.GENERALS_BASE_URL || '') + path || '/';
+        }
+    </script>
+    <link rel="stylesheet" href="{{ base_url }}/main.css?v=34">
     <title>generals</title>
 </head>
 
@@ -18,10 +25,10 @@
     </div>
     <script>
         $('#enter-room').on('click', function () {
-            location.href = '/games/' + $('#username-input').val();
+            location.href = withBaseUrl('/games/' + $('#username-input').val());
         });
         $('#replays').on('click', function () {
-            location.href = '/replays';
+            location.href = withBaseUrl('/replays');
         });
     </script>
 </body>

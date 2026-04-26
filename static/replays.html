@@ -6,12 +6,20 @@
         content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"></script>
-    <link rel="stylesheet" href="/main.css?v=34">
+    <script>
+        window.GENERALS_BASE_URL = {{ base_url|tojson }};
+        function withBaseUrl(path) {
+            if (path.charAt(0) != '/') path = '/' + path;
+            return (window.GENERALS_BASE_URL || '') + path || '/';
+        }
+    </script>
+    <link rel="stylesheet" href="{{ base_url }}/main.css?v=34">
     <title>generals</title>
 </head>
 
 <body style="overflow:scroll">
     <center id="app">
+        {% raw %}
         <table class="list selectable">
             <thead>
                 <tr>
@@ -32,6 +40,7 @@
                 </tr>
             </tbody>
         </table>
+        {% endraw %}
     </center>
     <script>
         function getTime(time) {
@@ -39,7 +48,7 @@
             return date.toJSON().substr(0, 19).replace('T', ' ');
         }
         function gotoReplay(id) {
-            location.href = '/replays/' + id;
+            location.href = withBaseUrl('/replays/' + id);
         }
         new Vue({
             el: '#app',
@@ -49,7 +58,7 @@
                 }
             },
             created: function () {
-                axios.get('/api/replays').then(res => {
+                axios.get(withBaseUrl('/api/replays')).then(res => {
                     this.replays = res.data;
                     console.log(this.replays);
                 })

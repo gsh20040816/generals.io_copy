@@ -1,11 +1,44 @@
-from flask import Flask, request, redirect, jsonify
+import os
+from flask import Flask, request, redirect, jsonify, render_template, send_from_directory, abort
 from flask.helpers import send_file
 from flask_socketio import SocketIO, join_room, leave_room, emit
 import time, json, random, string, hashlib
 from game import Game
 
-app = Flask(__name__, static_url_path='')
-socketio = SocketIO(app, async_mode='eventlet')
+
+def normalize_base_url(value):
+	value = (value or '').strip()
+	if value == '' or value == '/':
+		return ''
+	if not value.startswith('/'):
+		value = '/' + value
+	return value.rstrip('/')
+
+
+base_url = normalize_base_url(os.environ.get('GENERALS_BASE_URL', os.environ.get('BASE_URL', '')))
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+
+
+def app_url(path):
+	if not path.startswith('/'):
+		path = '/' + path
+	return (base_url + path) or '/'
+
+
+def random_room_url():
+	return app_url('/games/' + (''.join([chr(random.randint(0, 25) + ord('a')) for i in range(4)])))
+
+
+def route(path, **options):
+	return app.route(app_url(path), **options)
+
+
+def render_static_page(name):
+	return render_template(name, base_url=base_url, socketio_path=app_url('/socket.io'))
+
+
+app = Flask(__name__, static_folder=None, template_folder=static_dir)
+socketio = SocketIO(app, async_mode='eventlet', path=app_url('/socket.io'))
 
 game_uid = {}
 game_instance = {}
@@ -17,24 +50,24 @@ def md5(x):
 	return hashlib.md5(x.encode('utf-8')).hexdigest()
 
 
-@app.route('/games/<game_id>')
+@route('/games/<game_id>')
 def enter_room(game_id):
 	if len(game_id) == 0 or len(game_id) > 15:
-		return redirect('/games/' + (''.join([chr(random.randint(0, 25) + ord('a'))for i in range(4)])))
-	return app.send_static_file('game.html')
+		return redirect(random_room_url())
+	return render_static_page('game.html')
 
 
-@app.route('/')
+@route('/')
 def index():
-	return app.send_static_file('index.html')
+	return render_static_page('index.html')
 
 
-@app.route('/replays')
+@route('/replays')
 def replays():
-	return app.send_static_file('replays.html')
+	return render_static_page('replays.html')
 
 
-@app.route('/games')
+@route('/games')
 def get_games():
 	res = ''
 	cnt = 0
@@ -46,18 +79,18 @@ def get_games():
 
 @app.errorhandler(404)
 def enter_random_room(_):
-	return redirect('/games/' + (''.join([chr(random.randint(0, 25) + ord('a'))for i in range(4)])))
+	return redirect(random_room_url())
 
 
-@app.route('/replays/<hs>')
+@route('/replays/<hs>')
 def get_replays(hs):
 	for x in hs:
 		if x not in string.digits + string.ascii_letters + '+-':
 			return ''
-	return app.send_static_file('game.html')
+	return render_static_page('game.html')
 
 
-@app.route('/api/getreplay/<hs>')
+@route('/api/getreplay/<hs>')
 def get_replay(hs):
 	for x in hs:
 		if x not in string.digits + string.ascii_letters + '+-':
@@ -65,7 +98,7 @@ def get_replay(hs):
 	return send_file('replays/' + hs + '.json')
 
 
-@app.route('/api/replays')
+@route('/api/replays')
 def list_replay():
 	u = []
 	for x in open('replays/all.txt').readlines():
@@ -73,6 +106,13 @@ def list_replay():
 			u.append(json.loads(x))
 	u.sort(key=lambda x: -x['time'])
 	return jsonify(u)
+
+
+@route('/<path:filename>')
+def static_file(filename):
+	if filename.endswith('.html'):
+		abort(404)
+	return send_from_directory(static_dir, filename)
 
 
 @socketio.on('connect')

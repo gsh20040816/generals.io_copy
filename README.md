@@ -12,3 +12,12 @@ python3 server.py
 ```
 
 Then just open `http://localhost:23333`.
+
+## Base URL
+When deploying behind a reverse proxy that forwards a path prefix, set `GENERALS_BASE_URL`:
+
+```shell
+GENERALS_BASE_URL=/generals python3 server.py
+```
+
+Then open `http://localhost:23333/generals/`. `BASE_URL` is also accepted as a fallback.

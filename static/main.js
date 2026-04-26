@@ -3,6 +3,21 @@
 //grid_type[n][m] byte 0~49=army 50~99=city 100~149=generals 150~199=swamp with army 200=empty 201=mountain 202=fog 203=obstacle 204=swamp 205=swamp+fog
 //army_cnt[n][m] int
 
+var base_url = (window.GENERALS_BASE_URL || '').replace(/\/+$/, '');
+
+function withBaseUrl(path) {
+	if (path.charAt(0) != '/') path = '/' + path;
+	return (base_url + path) || '/';
+}
+
+function appPathname() {
+	var path = location.pathname;
+	if (base_url && (path == base_url || path.indexOf(base_url + '/') == 0)) {
+		path = path.substr(base_url.length) || '/';
+	}
+	return path;
+}
+
 var mapMouseDown = false;
 var mapDragging = false;
 var suppressNextMapClick = false;
@@ -216,10 +231,10 @@ var chat_focus = false, is_team = false, starting_audio, surrender_requested = f
 
 var is_replay = false, replay_id = false, replay_data = [], rcnt = 0, cur_turn = 0, is_autoplaying = false, autoplay_speed = 1;
 
-if (location.pathname.substr(0, 8) == '/replays') {
+if (appPathname().substr(0, 8) == '/replays') {
 	is_replay = true;
-	replay_id = location.pathname.substr(9);
-	$.get('/api/getreplay/' + replay_id, function (data) {
+	replay_id = appPathname().substr(9);
+	$.get(withBaseUrl('/api/getreplay/' + replay_id), function (data) {
 		replay_data = data;
 		replayStart();
 	});
@@ -509,7 +524,10 @@ function render() {
 }
 
 if (!is_replay) {
-	var socket = io.connect(location.origin, { transports: ['websocket', 'polling'] });
+	var socket = io.connect(location.origin, {
+		path: window.GENERALS_SOCKET_IO_PATH || withBaseUrl('/socket.io'),
+		transports: ['websocket', 'polling']
+	});
 } else {
 	function socket() { }
 	socket.on = function () { }
@@ -693,7 +711,7 @@ function setAutoplayRate() {
 }
 
 function _exit() {
-	location.href = '/';
+	location.href = withBaseUrl('/');
 }
 
 $(document).ready(function () {
@@ -728,9 +746,9 @@ $(document).ready(function () {
 	} else {
 		nickname = 'Anonymous';
 	}
-	var tmp = location.pathname;
-	room_id = tmp.substr(tmp.indexOf('games/') + 6);
-	starting_audio = new Audio('/gong.mp3');
+	var tmp = appPathname();
+	room_id = tmp.substr(tmp.indexOf('/games/') + 7);
+	starting_audio = new Audio(withBaseUrl('/gong.mp3'));
 	socket.emit('join_game_room', { 'room': room_id, 'nickname': nickname });
 });
 
@@ -1077,7 +1095,7 @@ $(document).ready(function () {
 		socket.emit('leave');
 	});
 	$($('#status-alert').children()[0].children[6]).on('click', function (e) {
-		window.open('/replays/' + replay_id, '_blank');
+		window.open(withBaseUrl('/replays/' + replay_id), '_blank');
 	});
 	$($('#status-alert').children()[0].children[8]).on('click', _exit);
 	$($('#surrender-alert').children()[0].children[2]).on('click', function (e) {
