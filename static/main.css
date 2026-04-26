@@ -40,7 +40,8 @@ body.lobby-scroll #username-input{box-sizing:border-box;max-width:100%}
 .room-action-bar #force-start{margin:6px auto}
 .custom-queue-page-container{background-color:#333;margin-top:0;padding:8px;min-width:1120px}
 body.lobby-scroll .custom-queue-page-container{box-sizing:border-box;min-width:0;width:100%;overflow-x:auto}
-body.lobby-scroll .custom-queue-page-container .tabs{max-width:100%;overflow-x:auto}
+body.lobby-scroll .team-section{overflow-x:hidden}
+body.lobby-scroll .custom-queue-page-container .tabs:not(#tabs-custom-team){max-width:100%;overflow-x:auto}
 .custom-queue-page-container h3{font-size:14px;margin:0 0 4px 0}
 .custom-queue-page-container p{font-size:12px;margin:0}
 .queue-section+.queue-section{margin-top:10px}
@@ -49,9 +50,10 @@ body.lobby-scroll .custom-queue-page-container .tabs{max-width:100%;overflow-x:a
 .map-token-section{padding-top:10px;padding-bottom:10px}
 .settings-section{padding-top:10px;padding-bottom:12px}
 #team-selection h3{font-size:18px;margin:0 0 3px 0}
-#team-selection #tabs-custom-team{box-sizing:border-box;display:inline-flex;flex-wrap:nowrap;justify-content:center;max-width:100%;overflow-x:visible;white-space:nowrap}
-#team-selection #tabs-custom-team div{box-sizing:border-box;min-width:35px;font-size:12px;flex:0 0 59px}
-#team-selection #tabs-custom-team div:last-child{flex-basis:120px}
+#team-selection #tabs-custom-team{box-sizing:border-box;display:inline-flex;flex-wrap:nowrap;justify-content:center;width:100%;max-width:100%;overflow:visible;white-space:nowrap;background-color:white;scrollbar-width:none}
+#team-selection #tabs-custom-team::-webkit-scrollbar{display:none}
+#team-selection #tabs-custom-team div{box-sizing:border-box;min-width:0;font-size:12px;flex:1 1 0}
+#team-selection #tabs-custom-team div:last-child{flex:2 1 0}
 #team-selection .inline-button{font-size:16px;padding:6px}
 #team-selection #teams{margin-top:0}
 #team-selection .custom-team-container{display:inline-block;margin:5px!important;padding:5px 10px 10px;background-color:#222}
