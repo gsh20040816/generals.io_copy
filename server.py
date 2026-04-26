@@ -117,7 +117,7 @@ gr_players = {}
 def join_game_room(sid, uid, gid):
 	gr_id[sid] = gid
 	if gid not in gr_conf:
-		gr_conf[gid] = {'width_ratio': 0.5, 'height_ratio': 0.5, 'city_ratio': 0.5, 'mountain_ratio': 0.5, 'swamp_ratio': 0.5, 'speed': 1, 'custom_map': ''}
+		gr_conf[gid] = {'width_ratio': 0.5, 'height_ratio': 0.5, 'city_ratio': 0.5, 'mountain_ratio': 0.5, 'swamp_ratio': 0.5, 'speed': 1, 'custom_map': '', 'move_general_on_capture': False}
 		gr_players[gid] = []
 	tcnt = [0] * (max_teams + 1)
 	for i in gr_players[gid]:
@@ -250,12 +250,19 @@ conf_str['mountain_ratio'] = 'Mountain Density option'
 conf_str['swamp_ratio'] = 'Swamp Density option'
 conf_str['speed'] = 'Game Speed option'
 conf_str['custom_map'] = 'Custom Map'
+conf_str['move_general_on_capture'] = 'Move General on Capture option'
 
 
 def getstr(x):
 	if type(x) is str:
 		return x
 	return str(x)
+
+
+def chkbool(x):
+	if type(x) is str:
+		return x.lower() in ('true', '1', 'on', 'yes')
+	return bool(x)
 
 
 @socketio.on('change_game_conf')
@@ -268,6 +275,7 @@ def on_change_game_conf(data):
 	tmp['swamp_ratio'] = chkfloat(data['swamp_ratio'], 0, 1)
 	tmp['speed'] = chkfloat(data['speed'], 0.25, 16)
 	tmp['custom_map'] = data['custom_map']
+	tmp['move_general_on_capture'] = chkbool(data.get('move_general_on_capture', False))
 	if request.sid in gr_id and len(tmp['custom_map']) >= 0 and len(tmp['custom_map']) < 100:
 		gid = gr_id[request.sid]
 		ioroom = getval(gid)

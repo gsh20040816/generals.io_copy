@@ -90,6 +90,14 @@ ENV/
 env.bak/
 venv.bak/
 
+# Local agent/workspace files
+.codex/
+
+# Editor temporary files
+*.swp
+*.swo
+*.kate-swp
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -103,4 +111,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# Runtime-generated replay files
 replays/*.json

@@ -268,6 +268,33 @@ function keypress(key) {
 	}
 }
 
+function getWheelDeltaY(e) {
+	var event = e.originalEvent || e;
+	if (typeof (event.deltaY) == "number" && event.deltaY != 0) return event.deltaY;
+	if (typeof (event.wheelDelta) == "number" && event.wheelDelta != 0) return -event.wheelDelta;
+	if (typeof (event.detail) == "number" && event.detail != 0) return event.detail;
+	return 0;
+}
+
+function zoomMapByWheel(e) {
+	if (!in_game) return;
+	var deltaY = getWheelDeltaY(e);
+	if (deltaY == 0) return;
+	if (e.preventDefault) e.preventDefault();
+	var nextScale;
+	if (deltaY > 0) {
+		nextScale = Math.max(scale - 1, 1);
+	} else {
+		nextScale = Math.min(scale + 1, scale_sizes.length - 1);
+	}
+	if (nextScale == scale) return;
+	scale = nextScale;
+	if (typeof (localStorage) != "undefined") {
+		localStorage.scale = scale.toString();
+	}
+	render();
+}
+
 $(document).ready(function () {
 	$('body').on('keypress', function (e) {
 		keypress(e.key.toLowerCase());
@@ -279,19 +306,12 @@ $(document).ready(function () {
 		selx = -1, sely = -1;
 		render();
 	});
-	$('body').bind('mousewheel', function (e) {
-		if (in_game) {
-			if (e.originalEvent.deltaY > 0) {
-				scale = Math.max(scale - 1, 1);
-			} else {
-				scale = Math.min(scale + 1, 6);
-			}
-			if (typeof (localStorage) != "undefined") {
-				localStorage.scale = scale.toString();
-			}
-			render();
-		}
-	})
+	var game = document.getElementById('game');
+	if (game) {
+		var wheelEvent = 'onwheel' in document ? 'wheel' : 'mousewheel';
+		game.addEventListener(wheelEvent, zoomMapByWheel, { passive: false });
+		game.addEventListener('DOMMouseScroll', zoomMapByWheel, { passive: false });
+	}
 	if (typeof (localStorage) != "undefined") {
 		if (typeof (localStorage.scale) == "undefined") {
 			localStorage.scale = '3';
@@ -603,6 +623,7 @@ socket.on('room_update', function (data) {
 	setRangeVal('mountain-density', data.mountain_ratio);
 	setRangeVal('swamp-density', data.swamp_ratio);
 	setTabVal('game-speed', data.speed + 'x');
+	setTabVal('move-general-on-capture', data.move_general_on_capture ? 'On' : 'Off');
 	$('#custom-map').val(data.custom_map);
 	var tmp = Array(max_teams + 1);
 	for (var i = 0; i <= max_teams; i++) {
@@ -686,6 +707,7 @@ function getConf() {
 	data.swamp_ratio = getRangeVal('swamp-density');
 	data.speed = parseFloat(getTabVal('game-speed'));
 	data.custom_map = $('#custom-map').val();
+	data.move_general_on_capture = getTabVal('move-general-on-capture') == 'On';
 	return data;
 }
 
@@ -753,6 +775,11 @@ function initTab(x, y, callback) {
 $(document).ready(function () {
 	$('.slider-container').each(function () { initRange(this) });
 	$('#tabs-game-speed').each(function () {
+		for (var i = 1; i < this.children.length; i++) {
+			initTab(this, this.children[i], updateConf);
+		}
+	});
+	$('#tabs-move-general-on-capture').each(function () {
 		for (var i = 1; i < this.children.length; i++) {
 			initTab(this, this.children[i], updateConf);
 		}

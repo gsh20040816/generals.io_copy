@@ -109,6 +109,7 @@ class Game:
 		self.city_ratio = game_conf['city_ratio']
 		self.mountain_ratio = game_conf['mountain_ratio']
 		self.swamp_ratio = game_conf['swamp_ratio']
+		self.move_general_on_capture = game_conf.get('move_general_on_capture', False)
 		self.pstat = [0 for i in player_ids]
 		self.pmove = [[] for i in player_ids]
 		self.lst_move = [(-1, -1, -1, -1, False) for i in player_ids]
@@ -381,6 +382,7 @@ class Game:
 		self.lock.release()
 
 	def kill(self, a, b):
+		b_general = self.generals[b - 1] if b > 0 else (-1, -1)
 		for i in range(self.n):
 			for j in range(self.m):
 				if self.owner[i][j] == b:
@@ -388,6 +390,13 @@ class Game:
 					self.army_cnt[i][j] = (self.army_cnt[i][j] + 1) // 2
 					if self.grid_type[i][j] == -2:
 						self.grid_type[i][j] = -1
+		if self.move_general_on_capture and a > 0 and b > 0 and b_general != (-1, -1):
+			a_general = self.generals[a - 1]
+			if a_general != (-1, -1):
+				self.grid_type[a_general[0]][a_general[1]] = -1
+			self.grid_type[b_general[0]][b_general[1]] = -2
+			self.generals[a - 1] = b_general
+		self.generals[b - 1] = (-1, -1)
 		self.pstat[b - 1] = left_game
 		self.deadcount += 1
 		self.deadorder[b - 1] = self.deadcount
@@ -416,8 +425,9 @@ class Game:
 			else:
 				tmp = cnt - self.army_cnt[dx][dy]
 				if self.grid_type[dx][dy] == -2:
-					self.kill(self.owner[x][y], self.owner[dx][dy])
-					self.grid_type[dx][dy] = -1
+					attacker = self.owner[x][y]
+					self.kill(attacker, self.owner[dx][dy])
+					self.grid_type[dx][dy] = -2 if self.move_general_on_capture and attacker > 0 else -1
 				self.army_cnt[dx][dy] = tmp
 				self.owner[dx][dy] = self.owner[x][y]
 
