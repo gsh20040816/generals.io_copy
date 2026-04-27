@@ -988,6 +988,7 @@ $(document).ready(function () {
 		if ($(this).hasClass('taken')) return;
 		socket.emit('change_color', { color: parseInt($(this).attr('data-color')) });
 	});
+	var composingUsername = false;
 	function changeUsername() {
 		var tmp = $('#username-input').val();
 		if (tmp == '') tmp = 'Anonymous';
@@ -996,8 +997,21 @@ $(document).ready(function () {
 			localStorage.username = tmp;
 		}
 	}
-	$('#username-input').on('change', _.debounce(changeUsername, 300));
-	$('#username-input').on('input', _.debounce(changeUsername, 300));
+	var delayChangeUsername = _.debounce(changeUsername, 300);
+	$('#username-input').on('compositionstart', function () {
+		composingUsername = true;
+	});
+	$('#username-input').on('compositionend', function () {
+		composingUsername = false;
+		if (delayChangeUsername.cancel) delayChangeUsername.cancel();
+		changeUsername();
+	});
+	$('#username-input').on('change', function () {
+		if (!composingUsername) changeUsername();
+	});
+	$('#username-input').on('input', function () {
+		if (!composingUsername) delayChangeUsername();
+	});
 	$('#custom-map').on('change', delayUpdateConf);
 	$('#custom-map').on('input', delayUpdateConf);
 });

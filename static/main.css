@@ -49,10 +49,10 @@ body.lobby-scroll .custom-queue-page-container .tabs:not(#tabs-custom-team){max-
 .username-section #you-are{margin-top:8px}
 .color-picker-section p{font-size:14px;margin:0 0 5px}
 .color-picker{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;max-width:490px;margin:5px auto}
-.supporter-circle{display:inline-block;width:24px;height:24px;margin:0;border-radius:50%;box-shadow:var(--player-color) 0 0 0 15px inset;cursor:pointer;transition:opacity .15s ease-in-out,box-shadow .15s ease-in-out,transform .15s ease-in-out}
+.supporter-circle{display:inline-block;width:24px;height:24px;margin:0;border-radius:50%;box-shadow:var(--player-color) 0 0 0 15px inset;cursor:pointer;transition:box-shadow .15s ease-in-out,transform .15s ease-in-out}
 .supporter-circle:hover{transform:scale(1.08)}
-.supporter-circle.selected{background-color:transparent!important;box-shadow:var(--player-color) 0 0 0 3px inset}
-.supporter-circle.taken{cursor:not-allowed;opacity:.25}
+.supporter-circle.selected{background-color:#222!important;background-image:none!important;box-shadow:var(--player-color) 0px 0px 0px 3px inset!important;cursor:unset}
+.supporter-circle.taken{cursor:not-allowed}
 .supporter-circle.taken:hover{transform:none}
 .map-token-section{padding-top:10px;padding-bottom:10px}
 .settings-section{padding-top:10px;padding-bottom:12px}
