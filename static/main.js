@@ -224,7 +224,7 @@ var grid_type, army_cnt, have_route = Array(4);
 var player_colors = [];
 var route;
 
-var room_id = '', client_id, ready_state = 0, lost, host_sequence = '';
+var room_id = '', client_id, ready_state = 0, lost;
 var max_teams = 16;
 
 var chat_focus = false, is_team = false, starting_audio, surrender_requested = false;
@@ -364,26 +364,6 @@ function keypress(key) {
 	}
 }
 
-function isTextInputTarget(target) {
-	var tag = target && target.tagName ? target.tagName.toLowerCase() : '';
-	return tag == 'input' || tag == 'textarea' || tag == 'select' || $(target).closest('[contenteditable="true"]').length > 0;
-}
-
-function checkHostSequence(e) {
-	if (in_game || isTextInputTarget(e.target) || typeof (e.key) != 'string' || e.key.length != 1) return;
-	var key = e.key.toLowerCase();
-	if (key == 'g') {
-		host_sequence = 'g';
-	} else if (host_sequence == 'g' && key == 's') {
-		host_sequence = 'gs';
-	} else if (host_sequence == 'gs' && key == 'h') {
-		host_sequence = '';
-		socket.emit('claim_host', {});
-	} else {
-		host_sequence = '';
-	}
-}
-
 function getWheelDeltaY(e) {
 	var event = e.originalEvent || e;
 	if (typeof (event.deltaY) == "number" && event.deltaY != 0) {
@@ -443,7 +423,6 @@ function showSurrenderedStatus() {
 
 $(document).ready(function () {
 	$('body').on('keypress', function (e) {
-		checkHostSequence(e);
 		keypress(e.key.toLowerCase());
 	});
 	$('body').on('keydown', function (e) {

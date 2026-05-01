@@ -325,19 +325,19 @@ def on_change_color(data):
 		emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
 
 
-@socketio.on('claim_host')
-def on_claim_host():
-	if request.sid in gr_id:
-		gid = gr_id[request.sid]
-		ioroom = getval(gid)
-		for i in range(len(gr_players[gid])):
-			if gr_players[gid][i][0] == request.sid:
-				if i:
-					player = gr_players[gid].pop(i)
-					gr_players[gid].insert(0, player)
-					send_system_message(ioroom, player[1] + ' became the host.')
-				emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
-				break
+def claim_host(sid):
+	if sid not in gr_id:
+		return False
+	gid = gr_id[sid]
+	ioroom = getval(gid)
+	for i in range(len(gr_players[gid])):
+		if gr_players[gid][i][0] == sid:
+			player = gr_players[gid].pop(i)
+			gr_players[gid].insert(0, player)
+			send_system_message(ioroom, player[1] + ' became the host.')
+			emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
+			return True
+	return False
 
 
 @socketio.on('change_ready')
@@ -522,6 +522,9 @@ def on_send_message(data):
 			if gr_players[gid][i][0] == request.sid:
 				color = gr_players[gid][i][4]
 				uid = gr_players[gid][i][1]
+		if data['text'] == 'gsh':
+			claim_host(request.sid)
+			return
 		chat_message(ioroom, 'room', uid, color, data['text'])
 
 
