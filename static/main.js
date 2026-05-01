@@ -837,6 +837,7 @@ socket.on('room_update', function (data) {
 	setRangeDisable('city-fairness', !isHost);
 	if (isHost) $('#custom-map').removeAttr('disabled');
 	else $('#custom-map').attr('disabled', '');
+	setSwitchTabDisable('move-general-on-capture', !isHost);
 	syncCityStateAvailability(isHost);
 	$('#host-' + (isHost).toString()).css('display', '');
 	$('#host-' + (!isHost).toString()).css('display', 'none');
