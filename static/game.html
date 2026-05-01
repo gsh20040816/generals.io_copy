@@ -138,6 +138,23 @@
                 </div>
                 <p class="modifier-description">On capturing an opponent, your general is moved to their generals former location. Your old general becomes a city.</p>
             </div>
+            <div class="modifier-option">
+                <div class="modifier-option-header">
+                    <h3 class="custom-queue-slider-header">City-State:</h3>
+                    <div class="modifier-switch-container">
+                        <div id="tabs-city-state" class="switch-tabs switch-off unselectable">
+                            <input type="hidden" value="Off">
+                            <label class="switch center-tag">
+                                <input type="checkbox" readonly>
+                                <span class="slider"></span>
+                                <span class="switch-label off-label" data-off="Off"></span>
+                                <span class="switch-label on-label" data-on="On"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="modifier-description">Each player starts with an owned city next to their general on random maps.</p>
+            </div>
             <h3>Map Width:</h3>
             <div class="slider-container" id="map-width">
                 <input type="range" step="0.01" min="0" max="1" value="0.5">
@@ -158,6 +175,20 @@
                 <p class="center-horizontal slider-value">0.5</p>
                 <p class="slider-min">low</p>
                 <p class="slider-max">high</p>
+            </div>
+            <h3>City Fairness:</h3>
+            <div class="slider-container" id="city-fairness">
+                <input type="range" step="0.01" min="0" max="1" value="0.75">
+                <p class="center-horizontal slider-value">0.75</p>
+                <p class="slider-min">random</p>
+                <p class="slider-max">fair</p>
+            </div>
+            <h3>Spawn Fairness:</h3>
+            <div class="slider-container" id="spawn-fairness">
+                <input type="range" step="0.01" min="0" max="1" value="0.75">
+                <p class="center-horizontal slider-value">0.75</p>
+                <p class="slider-min">random</p>
+                <p class="slider-max">fair</p>
             </div>
             <h3>Mountain Density:</h3>
             <div class="slider-container" id="mountain-density">
