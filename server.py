@@ -163,7 +163,19 @@ gr_players = {}
 
 
 def default_game_conf():
-	return {'width_ratio': 0.5, 'height_ratio': 0.5, 'city_ratio': 0.5, 'mountain_ratio': 0.5, 'swamp_ratio': 0, 'speed': 4, 'custom_map': '', 'move_general_on_capture': True, 'city_state': True}
+	return {
+		'width_ratio': 0.5,
+		'height_ratio': 0.5,
+		'city_ratio': 0.5,
+		'mountain_ratio': 0.5,
+		'swamp_ratio': 0,
+		'spawn_fairness': 0.75,
+		'city_fairness': 0.75,
+		'speed': 4,
+		'custom_map': '',
+		'move_general_on_capture': True,
+		'city_state': True,
+	}
 
 
 def first_available_color(gid):
@@ -203,29 +215,50 @@ def leave_game_room(sid, gid):
 	return res
 
 
+def playable_players(players):
+	return [i for i in players if i[2]]
+
+
+def playable_team_count(players):
+	return len(set(i[2] for i in players if i[2]))
+
+
+def valid_start_player_count(players):
+	return len(playable_players(players)) >= 2 and playable_team_count(players) >= 2
+
+
 def get_req_ready(x):
 	return x
 
 
 def get_req(x):
-	cnt = 0
-	for i in x:
-		if i[2]:
-			cnt += 1
+	if not valid_start_player_count(x):
+		return 0
+	cnt = len(playable_players(x))
 	return get_req_ready(cnt)
+
+
+def get_ready_count(players):
+	cnt = 0
+	for i in players:
+		if i[2] and i[3]:
+			cnt += 1
+	return cnt
+
+
+def can_start_game(players):
+	need = get_req(players)
+	return need > 0 and get_ready_count(players) >= need
 
 
 def gen_game_conf(gid):
 	tmp = gr_conf[gid].copy()
 	pl = []
-	cnt = 0
 	for i in gr_players[gid]:
 		pl.append({'sid': md5(i[0]), 'uid': i[1], 'team': i[2], 'ready': bool(i[3] and i[2]), 'color': i[4]})
-		if i[2] and i[3]:
-			cnt += 1
 	need = get_req(gr_players[gid])
 	tmp['players'] = pl
-	tmp['ready'] = cnt
+	tmp['ready'] = get_ready_count(gr_players[gid])
 	tmp['need'] = need
 	return tmp
 
@@ -320,11 +353,9 @@ def on_change_ready(data):
 
 
 def chk_ready(gid, ioroom):
-	rcnt = 0
-	for i in gr_players[gid]:
-		if i[3] and i[2]:
-			rcnt += 1
-	if rcnt >= get_req(gr_players[gid]) and get_req(gr_players[gid]):
+	if gid not in gr_players:
+		return
+	if can_start_game(gr_players[gid]):
 		start_game(gid)
 	else:
 		emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
@@ -350,6 +381,8 @@ conf_str['height_ratio'] = 'Height option'
 conf_str['city_ratio'] = 'City Density option'
 conf_str['mountain_ratio'] = 'Mountain Density option'
 conf_str['swamp_ratio'] = 'Swamp Density option'
+conf_str['spawn_fairness'] = 'Spawn Fairness option'
+conf_str['city_fairness'] = 'City Fairness option'
 conf_str['speed'] = 'Game Speed option'
 conf_str['custom_map'] = 'Custom Map'
 conf_str['move_general_on_capture'] = 'Leapfrog modifier'
@@ -376,10 +409,14 @@ def on_change_game_conf(data):
 	tmp['city_ratio'] = chkfloat(data['city_ratio'], 0, 1)
 	tmp['mountain_ratio'] = chkfloat(data['mountain_ratio'], 0, 1)
 	tmp['swamp_ratio'] = chkfloat(data['swamp_ratio'], 0, 1)
+	tmp['spawn_fairness'] = chkfloat(data.get('spawn_fairness', 0.75), 0, 1)
+	tmp['city_fairness'] = chkfloat(data.get('city_fairness', 0.75), 0, 1)
 	tmp['speed'] = chkspeed(data['speed'])
 	tmp['custom_map'] = data['custom_map']
 	tmp['move_general_on_capture'] = chkbool(data.get('move_general_on_capture', False))
 	tmp['city_state'] = chkbool(data.get('city_state', False))
+	if tmp['custom_map'].strip():
+		tmp['city_state'] = False
 	if request.sid in gr_id and len(tmp['custom_map']) >= 0 and len(tmp['custom_map']) < 100:
 		gid = gr_id[request.sid]
 		ioroom = getval(gid)
@@ -422,6 +459,11 @@ def on_leave():
 
 
 def start_game(gid):
+	if gid not in gr_conf or gid not in gr_players:
+		return
+	if not can_start_game(gr_players[gid]):
+		emit('room_update', gen_game_conf(gid), room='game_' + getval(gid))
+		return
 	grc = gr_conf.pop(gid)
 	grp = gr_players.pop(gid)
 	tmp = gid

@@ -12,8 +12,8 @@
         window.GENERALS_SOCKET_IO_PATH = {{ socketio_path|tojson }};
     </script>
     <script src="{{ base_url }}/crown.js"></script>
-    <script src="{{ base_url }}/main.js?v=56"></script>
-    <link rel="stylesheet" href="{{ base_url }}/main.css?v=34">
+    <script src="{{ base_url }}/main.js?v=57"></script>
+    <link rel="stylesheet" href="{{ base_url }}/main.css?v=36">
     <title>generals</title>
 </head>
 
@@ -153,7 +153,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="modifier-description">Each player starts with a captured city next to their general on random maps.</p>
+                <p class="modifier-description">Each player starts with an owned city next to their general on random maps.</p>
             </div>
             <h3>Map Width:</h3>
             <div class="slider-container" id="map-width">
@@ -175,6 +175,20 @@
                 <p class="center-horizontal slider-value">0.5</p>
                 <p class="slider-min">low</p>
                 <p class="slider-max">high</p>
+            </div>
+            <h3>City Fairness:</h3>
+            <div class="slider-container" id="city-fairness">
+                <input type="range" step="0.01" min="0" max="1" value="0.75">
+                <p class="center-horizontal slider-value">0.75</p>
+                <p class="slider-min">random</p>
+                <p class="slider-max">fair</p>
+            </div>
+            <h3>Spawn Fairness:</h3>
+            <div class="slider-container" id="spawn-fairness">
+                <input type="range" step="0.01" min="0" max="1" value="0.75">
+                <p class="center-horizontal slider-value">0.75</p>
+                <p class="slider-min">random</p>
+                <p class="slider-max">fair</p>
             </div>
             <h3>Mountain Density:</h3>
             <div class="slider-container" id="mountain-density">

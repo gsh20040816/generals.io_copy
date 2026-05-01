@@ -229,7 +229,7 @@ var max_teams = 16;
 
 var chat_focus = false, is_team = false, starting_audio, surrender_requested = false;
 
-var is_replay = false, replay_id = false, replay_data = [], rcnt = 0, cur_turn = 0, is_autoplaying = false, autoplay_speed = 1;
+var is_replay = false, replay_id = false, replay_data = [], rcnt = 0, cur_turn = 0, replay_state_index = -1, is_autoplaying = false, autoplay_speed = 1;
 
 if (appPathname().substr(0, 8) == '/replays') {
 	is_replay = true;
@@ -245,7 +245,7 @@ function replayStart() {
 	if (rcnt == 2) {
 		init_map(replay_data.n, replay_data.m);
 		in_game = true;
-		update(replay_data.history[0]);
+		applyReplayFrame(0);
 	}
 }
 
@@ -682,16 +682,33 @@ socket.on('init_map', function (data) {
 	}
 });
 
+function applyReplayFrame(index) {
+	if (index < 0 || index >= replay_data.history.length) return;
+	if (replay_state_index == index - 1) {
+		cur_turn = index;
+		replay_state_index = index;
+		update(replay_data.history[index]);
+		return;
+	}
+	var start = index;
+	while (start > 0 && replay_data.history[start].is_diff) {
+		start--;
+	}
+	for (var i = start; i <= index; i++) {
+		update(replay_data.history[i]);
+	}
+	cur_turn = index;
+	replay_state_index = index;
+}
+
 function backTurn() {
 	if (is_autoplaying) switchAutoplay();
-	cur_turn = Math.max(0, cur_turn - 20);
-	update(replay_data.history[cur_turn]);
+	applyReplayFrame(Math.max(0, cur_turn - 20));
 }
 
 function nextTurn(ignore = false) {
 	if (is_autoplaying && !ignore) return;
-	cur_turn = Math.min(replay_data.history.length - 1, cur_turn + 1);
-	update(replay_data.history[cur_turn]);
+	applyReplayFrame(Math.min(replay_data.history.length - 1, cur_turn + 1));
 }
 
 function jumpToTurn() {
@@ -701,8 +718,7 @@ function jumpToTurn() {
 	else turn = parseInt(uturn) * 2;
 	for (var i = 0; i < replay_data.history.length; i++) {
 		if (replay_data.history[i].turn == turn) {
-			cur_turn = i;
-			update(replay_data.history[cur_turn]);
+			applyReplayFrame(i);
 			break;
 		}
 	}
@@ -783,6 +799,22 @@ function crownForColor(color) {
 	return crown_html.replace(/c1/g, 'c' + color);
 }
 
+function hasCustomMapSelected() {
+	return $('#custom-map').val().trim() != '';
+}
+
+function setSwitchTabDisable(x, disabled) {
+	var tab = $('#tabs-' + x);
+	tab.toggleClass('disabled', disabled);
+	tab.find('input[type="checkbox"]').prop('disabled', disabled);
+}
+
+function syncCityStateAvailability(isHost) {
+	var hasCustomMap = hasCustomMapSelected();
+	if (hasCustomMap) setTabVal('city-state', 'Off');
+	setSwitchTabDisable('city-state', !isHost || hasCustomMap);
+}
+
 function syncColorPicker(players) {
 	var ownColor = 0, usedByOthers = {};
 	for (var i = 0; i < players.length; i++) {
@@ -806,6 +838,8 @@ socket.on('room_update', function (data) {
 	setRangeVal('city-density', data.city_ratio);
 	setRangeVal('mountain-density', data.mountain_ratio);
 	setRangeVal('swamp-density', data.swamp_ratio);
+	setRangeVal('spawn-fairness', data.spawn_fairness);
+	setRangeVal('city-fairness', data.city_fairness);
 	setTabVal('game-speed', data.speed + 'x');
 	setTabVal('move-general-on-capture', data.move_general_on_capture ? 'On' : 'Off');
 	setTabVal('city-state', data.city_state ? 'On' : 'Off');
@@ -820,8 +854,11 @@ socket.on('room_update', function (data) {
 	setRangeDisable('city-density', !isHost);
 	setRangeDisable('mountain-density', !isHost);
 	setRangeDisable('swamp-density', !isHost);
+	setRangeDisable('spawn-fairness', !isHost);
+	setRangeDisable('city-fairness', !isHost);
 	if (isHost) $('#custom-map').removeAttr('disabled');
 	else $('#custom-map').attr('disabled', '');
+	syncCityStateAvailability(isHost);
 	$('#host-' + (isHost).toString()).css('display', '');
 	$('#host-' + (!isHost).toString()).css('display', 'none');
 	syncColorPicker(data.players);
@@ -889,10 +926,12 @@ function getConf() {
 	data.city_ratio = getRangeVal('city-density');
 	data.mountain_ratio = getRangeVal('mountain-density');
 	data.swamp_ratio = getRangeVal('swamp-density');
+	data.spawn_fairness = getRangeVal('spawn-fairness');
+	data.city_fairness = getRangeVal('city-fairness');
 	data.speed = parseFloat(getTabVal('game-speed'));
 	data.custom_map = $('#custom-map').val();
 	data.move_general_on_capture = getTabVal('move-general-on-capture') == 'On';
-	data.city_state = getTabVal('city-state') == 'On';
+	data.city_state = getTabVal('city-state') == 'On' && data.custom_map.trim() == '';
 	return data;
 }
 
@@ -948,7 +987,7 @@ function setTabVal(x, y) {
 		}
 	}
 	$($('#tabs-' + x)[0].children[0]).val(y);
-	if (x == 'move-general-on-capture' || x == 'city-state') syncSwitchTab($('#tabs-' + x)[0], y);
+	if ($('#tabs-' + x).hasClass('switch-tabs')) syncSwitchTab($('#tabs-' + x)[0], y);
 }
 
 function initTab(x, y, callback) {
@@ -969,6 +1008,7 @@ function initSwitchTab(x, callback) {
 	syncSwitchTab(x, getTabVal($(x).attr('id').substr(5)));
 	$(x).find('.switch').on('click', function (e) {
 		e.preventDefault();
+		if ($(x).hasClass('disabled')) return;
 		var name = $(x).attr('id').substr(5);
 		setTabVal(name, getTabVal(name) == 'On' ? 'Off' : 'On');
 		callback();
@@ -1014,6 +1054,7 @@ $(document).ready(function () {
 		if ($(this).hasClass('taken')) return;
 		socket.emit('change_color', { color: parseInt($(this).attr('data-color')) });
 	});
+	var composingUsername = false;
 	function changeUsername() {
 		var tmp = $('#username-input').val();
 		if (tmp == '') tmp = 'Anonymous';
@@ -1022,10 +1063,29 @@ $(document).ready(function () {
 			localStorage.username = tmp;
 		}
 	}
-	$('#username-input').on('change', _.debounce(changeUsername, 300));
-	$('#username-input').on('input', _.debounce(changeUsername, 300));
-	$('#custom-map').on('change', delayUpdateConf);
-	$('#custom-map').on('input', delayUpdateConf);
+	var delayChangeUsername = _.debounce(changeUsername, 300);
+	$('#username-input').on('compositionstart', function () {
+		composingUsername = true;
+	});
+	$('#username-input').on('compositionend', function () {
+		composingUsername = false;
+		if (delayChangeUsername.cancel) delayChangeUsername.cancel();
+		changeUsername();
+	});
+	$('#username-input').on('change', function () {
+		if (!composingUsername) changeUsername();
+	});
+	$('#username-input').on('input', function () {
+		if (!composingUsername) delayChangeUsername();
+	});
+	$('#custom-map').on('change', function () {
+		syncCityStateAvailability(!$('#custom-map').is(':disabled'));
+		delayUpdateConf();
+	});
+	$('#custom-map').on('input', function () {
+		syncCityStateAvailability(!$('#custom-map').is(':disabled'));
+		delayUpdateConf();
+	});
 });
 
 var chatStr = '';
