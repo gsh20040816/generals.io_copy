@@ -788,6 +788,10 @@ function setSwitchTabDisable(x, disabled) {
 	tab.find('input[type="checkbox"]').prop('disabled', disabled);
 }
 
+function setTabDisable(x, disabled) {
+	$('#tabs-' + x).toggleClass('disabled', disabled);
+}
+
 function syncCityStateAvailability(isHost) {
 	var hasCustomMap = hasCustomMapSelected();
 	if (hasCustomMap) setTabVal('city-state', 'Off');
@@ -837,6 +841,7 @@ socket.on('room_update', function (data) {
 	setRangeDisable('city-fairness', !isHost);
 	if (isHost) $('#custom-map').removeAttr('disabled');
 	else $('#custom-map').attr('disabled', '');
+	setTabDisable('game-speed', !isHost);
 	setSwitchTabDisable('move-general-on-capture', !isHost);
 	syncCityStateAvailability(isHost);
 	$('#host-' + (isHost).toString()).css('display', '');
@@ -937,6 +942,7 @@ function setRangeVal(x, y) {
 }
 
 function setRangeDisable(x, y) {
+	$('#' + x).toggleClass('disabled', y);
 	if (y) $($('#' + x)[0].children[0]).attr('disabled', '');
 	else $($('#' + x)[0].children[0]).removeAttr('disabled');
 }
@@ -972,6 +978,7 @@ function setTabVal(x, y) {
 
 function initTab(x, y, callback) {
 	$(y).on('click', function () {
+		if ($(x).hasClass('disabled')) return;
 		setTabVal($(x).attr('id').substr(5), $(y).html());
 		callback();
 	});

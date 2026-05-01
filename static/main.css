@@ -86,9 +86,14 @@ body.lobby-scroll .custom-queue-page-container .tabs:not(#tabs-custom-team){max-
 .switch input:not(:checked)+.slider:before{background-color:rgba(128,128,128,.5)}
 .switch input:checked+.slider:before{transform:translateX(26px)}
 .switch:hover input:not([disabled])+.slider{border-color:#bbb;background-color:#bbb}
+.tabs.disabled,.slider-container.disabled{opacity:.45}
+.tabs.disabled .inline-button,.slider-container.disabled input{cursor:not-allowed}
+.tabs.disabled .inline-button:hover{background-color:transparent}
+.tabs.disabled .inline-button.inverted:hover{background-color:teal}
 .switch-tabs.disabled{opacity:.45}
 .switch-tabs.disabled .switch .slider{cursor:not-allowed}
 .switch-tabs.disabled .switch-label{cursor:not-allowed}
+input:disabled{opacity:.45;cursor:not-allowed}
 
 .custom-team-container{display:inline-block;margin:5px !important;padding:6px;padding-top:4px;background-color:#222}
 .custom-team-container h4{margin:2px;font-family:Quicksand-Bold;border-bottom:1px solid white;padding:2px;font-size:12px}
