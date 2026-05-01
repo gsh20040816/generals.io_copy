@@ -227,7 +227,7 @@ var route;
 var room_id = '', client_id, ready_state = 0, lost;
 var max_teams = 16;
 
-var chat_focus = false, is_team = false, starting_audio, surrender_requested = false;
+var chat_focus = false, is_team = false, starting_audio, kill_audio, surrender_requested = false;
 
 var is_replay = false, replay_id = false, replay_data = [], rcnt = 0, cur_turn = 0, replay_state_index = -1, is_autoplaying = false, autoplay_speed = 1;
 
@@ -421,6 +421,13 @@ function showSurrenderedStatus() {
 	lost = true;
 }
 
+function playAudio(audio) {
+	if (!audio) return;
+	audio.currentTime = 0;
+	var play = audio.play();
+	if (play && play.catch) play.catch(function () { });
+}
+
 $(document).ready(function () {
 	$('body').on('keypress', function (e) {
 		keypress(e.key.toLowerCase());
@@ -587,7 +594,10 @@ function update(data) {
 	$('#turn-counter').html('Turn ' + Math.floor(data.turn / 2) + (data.turn % 2 == 1 ? '.' : ''));
 	$('#turn-counter').css('display', '');
 	if (is_replay) return;
-	if (typeof (data.kills[client_id]) != 'undefined' && !surrender_requested) {
+	if (data.kills && Object.keys(data.kills).length) {
+		playAudio(kill_audio);
+	}
+	if (data.kills && typeof (data.kills[client_id]) != 'undefined' && !surrender_requested) {
 		$($('#status-alert').children()[0].children[0]).html('Game Over');
 		$($('#status-alert').children()[0].children[1]).html('<span>You were defeated by <span style="font-family: Quicksand-Bold;">' + htmlescape(data.kills[client_id]) + '</span>.</span>');
 		$($('#status-alert').children()[0].children[1]).css('display', '');
@@ -616,7 +626,7 @@ socket.on('starting', function () {
 	setLobbyScroll(false);
 	$('#menu').css('display', 'none');
 	$('#game-starting').css('display', '');
-	starting_audio.play();
+	playAudio(starting_audio);
 });
 
 function addroute(x, y, d, type) {
@@ -765,6 +775,7 @@ $(document).ready(function () {
 	var tmp = appPathname();
 	room_id = tmp.substr(tmp.indexOf('/games/') + 7);
 	starting_audio = new Audio(withBaseUrl('/gong.mp3'));
+	kill_audio = new Audio(withBaseUrl('/gong.mp3'));
 	socket.emit('join_game_room', { 'room': room_id, 'nickname': nickname });
 });
 

@@ -691,7 +691,7 @@ class Game:
 			if slot is None:
 				continue
 			reserved.add(slot)
-			self.place_city(slot, 1, i + 1)
+			self.place_city(slot, 1)
 
 	def neutral_city_candidates(self):
 		res = []
