@@ -224,7 +224,7 @@ var grid_type, army_cnt, have_route = Array(4);
 var player_colors = [];
 var route;
 
-var room_id = '', client_id, ready_state = 0, lost;
+var room_id = '', client_id, ready_state = 0, lost, host_sequence = '';
 var max_teams = 16;
 
 var chat_focus = false, is_team = false, starting_audio, surrender_requested = false;
@@ -364,6 +364,26 @@ function keypress(key) {
 	}
 }
 
+function isTextInputTarget(target) {
+	var tag = target && target.tagName ? target.tagName.toLowerCase() : '';
+	return tag == 'input' || tag == 'textarea' || tag == 'select' || $(target).closest('[contenteditable="true"]').length > 0;
+}
+
+function checkHostSequence(e) {
+	if (in_game || isTextInputTarget(e.target) || typeof (e.key) != 'string' || e.key.length != 1) return;
+	var key = e.key.toLowerCase();
+	if (key == 'g') {
+		host_sequence = 'g';
+	} else if (host_sequence == 'g' && key == 's') {
+		host_sequence = 'gs';
+	} else if (host_sequence == 'gs' && key == 'h') {
+		host_sequence = '';
+		socket.emit('claim_host', {});
+	} else {
+		host_sequence = '';
+	}
+}
+
 function getWheelDeltaY(e) {
 	var event = e.originalEvent || e;
 	if (typeof (event.deltaY) == "number" && event.deltaY != 0) {
@@ -423,6 +443,7 @@ function showSurrenderedStatus() {
 
 $(document).ready(function () {
 	$('body').on('keypress', function (e) {
+		checkHostSequence(e);
 		keypress(e.key.toLowerCase());
 	});
 	$('body').on('keydown', function (e) {
@@ -787,6 +808,7 @@ socket.on('room_update', function (data) {
 	setRangeVal('swamp-density', data.swamp_ratio);
 	setTabVal('game-speed', data.speed + 'x');
 	setTabVal('move-general-on-capture', data.move_general_on_capture ? 'On' : 'Off');
+	setTabVal('city-state', data.city_state ? 'On' : 'Off');
 	$('#custom-map').val(data.custom_map);
 	var tmp = Array(max_teams + 1);
 	for (var i = 0; i <= max_teams; i++) {
@@ -870,6 +892,7 @@ function getConf() {
 	data.speed = parseFloat(getTabVal('game-speed'));
 	data.custom_map = $('#custom-map').val();
 	data.move_general_on_capture = getTabVal('move-general-on-capture') == 'On';
+	data.city_state = getTabVal('city-state') == 'On';
 	return data;
 }
 
@@ -925,7 +948,7 @@ function setTabVal(x, y) {
 		}
 	}
 	$($('#tabs-' + x)[0].children[0]).val(y);
-	if (x == 'move-general-on-capture') syncSwitchTab($('#tabs-' + x)[0], y);
+	if (x == 'move-general-on-capture' || x == 'city-state') syncSwitchTab($('#tabs-' + x)[0], y);
 }
 
 function initTab(x, y, callback) {
@@ -973,6 +996,9 @@ $(document).ready(function () {
 		}
 	});
 	$('#tabs-move-general-on-capture').each(function () {
+		initSwitchTab(this, updateConf);
+	});
+	$('#tabs-city-state').each(function () {
 		initSwitchTab(this, updateConf);
 	});
 	$('#tabs-custom-team').each(function () {

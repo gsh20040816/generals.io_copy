@@ -107,15 +107,15 @@
             </p>
             <h3>Game Speed:</h3>
             <div id="tabs-game-speed" class="tabs background unselectable">
-                <input type="hidden" value="1x">
+                <input type="hidden" value="4x">
                 <div class="inline-button">0.25x</div>
                 <div class="inline-button">0.5x</div>
                 <div class="inline-button">0.75x</div>
-                <div class="inline-button inverted">1x</div>
+                <div class="inline-button">1x</div>
                 <div class="inline-button">1.5x</div>
                 <div class="inline-button">2x</div>
                 <div class="inline-button">3x</div>
-                <div class="inline-button">4x</div>
+                <div class="inline-button inverted">4x</div>
                 <div class="inline-button">6x</div>
                 <div class="inline-button">8x</div>
                 <div class="inline-button">12x</div>
@@ -125,10 +125,10 @@
                 <div class="modifier-option-header">
                     <h3 class="custom-queue-slider-header">Leapfrog:</h3>
                     <div class="modifier-switch-container">
-                        <div id="tabs-move-general-on-capture" class="switch-tabs switch-off unselectable">
-                            <input type="hidden" value="Off">
+                        <div id="tabs-move-general-on-capture" class="switch-tabs switch-on unselectable">
+                            <input type="hidden" value="On">
                             <label class="switch center-tag">
-                                <input type="checkbox" readonly>
+                                <input type="checkbox" readonly checked>
                                 <span class="slider"></span>
                                 <span class="switch-label off-label" data-off="Off"></span>
                                 <span class="switch-label on-label" data-on="On"></span>
@@ -137,6 +137,23 @@
                     </div>
                 </div>
                 <p class="modifier-description">On capturing an opponent, your general is moved to their generals former location. Your old general becomes a city.</p>
+            </div>
+            <div class="modifier-option">
+                <div class="modifier-option-header">
+                    <h3 class="custom-queue-slider-header">City-State:</h3>
+                    <div class="modifier-switch-container">
+                        <div id="tabs-city-state" class="switch-tabs switch-on unselectable">
+                            <input type="hidden" value="On">
+                            <label class="switch center-tag">
+                                <input type="checkbox" readonly checked>
+                                <span class="slider"></span>
+                                <span class="switch-label off-label" data-off="Off"></span>
+                                <span class="switch-label on-label" data-on="On"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="modifier-description">Each player starts with a captured city next to their general on random maps.</p>
             </div>
             <h3>Map Width:</h3>
             <div class="slider-container" id="map-width">

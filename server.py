@@ -162,6 +162,10 @@ gr_conf = {}
 gr_players = {}
 
 
+def default_game_conf():
+	return {'width_ratio': 0.5, 'height_ratio': 0.5, 'city_ratio': 0.5, 'mountain_ratio': 0.5, 'swamp_ratio': 0, 'speed': 4, 'custom_map': '', 'move_general_on_capture': True, 'city_state': True}
+
+
 def first_available_color(gid):
 	used = {}
 	if gid in gr_players:
@@ -176,7 +180,7 @@ def first_available_color(gid):
 def join_game_room(sid, uid, gid):
 	gr_id[sid] = gid
 	if gid not in gr_conf:
-		gr_conf[gid] = {'width_ratio': 0.5, 'height_ratio': 0.5, 'city_ratio': 0.5, 'mountain_ratio': 0.5, 'swamp_ratio': 0.5, 'speed': 1, 'custom_map': '', 'move_general_on_capture': False}
+		gr_conf[gid] = default_game_conf()
 		gr_players[gid] = []
 	tcnt = [0] * (max_teams + 1)
 	for i in gr_players[gid]:
@@ -200,7 +204,7 @@ def leave_game_room(sid, gid):
 
 
 def get_req_ready(x):
-	return x - int(x * 0.3)
+	return x
 
 
 def get_req(x):
@@ -288,6 +292,21 @@ def on_change_color(data):
 		emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
 
 
+@socketio.on('claim_host')
+def on_claim_host():
+	if request.sid in gr_id:
+		gid = gr_id[request.sid]
+		ioroom = getval(gid)
+		for i in range(len(gr_players[gid])):
+			if gr_players[gid][i][0] == request.sid:
+				if i:
+					player = gr_players[gid].pop(i)
+					gr_players[gid].insert(0, player)
+					send_system_message(ioroom, player[1] + ' became the host.')
+				emit('room_update', gen_game_conf(gid), room='game_' + ioroom)
+				break
+
+
 @socketio.on('change_ready')
 def on_change_ready(data):
 	data['ready'] = bool(data['ready'])
@@ -334,6 +353,7 @@ conf_str['swamp_ratio'] = 'Swamp Density option'
 conf_str['speed'] = 'Game Speed option'
 conf_str['custom_map'] = 'Custom Map'
 conf_str['move_general_on_capture'] = 'Leapfrog modifier'
+conf_str['city_state'] = 'City-State modifier'
 
 
 def getstr(x):
@@ -359,6 +379,7 @@ def on_change_game_conf(data):
 	tmp['speed'] = chkspeed(data['speed'])
 	tmp['custom_map'] = data['custom_map']
 	tmp['move_general_on_capture'] = chkbool(data.get('move_general_on_capture', False))
+	tmp['city_state'] = chkbool(data.get('city_state', False))
 	if request.sid in gr_id and len(tmp['custom_map']) >= 0 and len(tmp['custom_map']) < 100:
 		gid = gr_id[request.sid]
 		ioroom = getval(gid)

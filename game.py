@@ -112,6 +112,7 @@ class Game:
 		self.mountain_ratio = game_conf['mountain_ratio']
 		self.swamp_ratio = game_conf['swamp_ratio']
 		self.move_general_on_capture = game_conf.get('move_general_on_capture', False)
+		self.city_state = game_conf.get('city_state', False)
 		self.pstat = [0 for i in player_ids]
 		self.pmove = [[] for i in player_ids]
 		self.lst_move = [(-1, -1, -1, -1, False) for i in player_ids]
@@ -273,6 +274,27 @@ class Game:
 					self.owner[ge[cu][0]][ge[cu][1]] = i + 1
 					self.army_cnt[ge[cu][0]][ge[cu][1]] = 1
 				cu += 1
+		if self.city_state and not self.is_custom:
+			self.add_city_states()
+
+	def add_city_states(self):
+		dx = [-1, 1, 0, 0]
+		dy = [0, 0, -1, 1]
+		for i in range(self.pcnt):
+			if self.pstat[i] == left_game:
+				continue
+			x, y = self.generals[i]
+			candidates = []
+			for d in range(4):
+				nx = x + dx[d]
+				ny = y + dy[d]
+				if self.chkxy(nx, ny) and self.grid_type[nx][ny] == 0 and self.owner[nx][ny] == 0:
+					candidates.append((nx, ny))
+			if len(candidates):
+				x, y = random.choice(candidates)
+				self.grid_type[x][y] = -1
+				self.owner[x][y] = i + 1
+				self.army_cnt[x][y] = 1
 
 	def chkxy(self, x, y):
 		return x >= 0 and y >= 0 and x < self.n and y < self.m
