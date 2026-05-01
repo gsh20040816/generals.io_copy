@@ -847,10 +847,12 @@ socket.on('room_update', function (data) {
 	$('#host-' + (isHost).toString()).css('display', '');
 	$('#host-' + (!isHost).toString()).css('display', 'none');
 	syncColorPicker(data.players);
+	var isPlayer = false;
 	for (var i = 0; i < data.players.length; i++) {
 		if (data.players[i].sid == client_id) {
 			setTabVal('custom-team', data.players[i].team ? data.players[i].team.toString() : 'Spectator');
 			$('#you-are').css('display', '');
+			isPlayer = !!data.players[i].team;
 			if (data.players[i].team) {
 				$('#you-are-2').css('display', '');
 				$($('#you-are-2')[0].children[1]).attr('class', 'inline-color-block c' + data.players[i].color);
@@ -891,7 +893,7 @@ socket.on('room_update', function (data) {
 	}
 	res_html += tmp[0];
 	$('#teams').html(res_html);
-	if (data.need > 1) {
+	if (isPlayer && data.need > 1) {
 		$('#force-start').css('display', 'block');
 		$('#force-start').html('Force Start ' + data.ready + ' / ' + data.need);
 	} else {
