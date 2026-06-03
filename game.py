@@ -716,33 +716,62 @@ class Game:
 	def team_general_positions(self, team):
 		return [self.generals[i] for i in self.team_players.get(team, []) if self.generals[i] != (-1, -1)]
 
-	def fair_city_choices(self, candidates, own_dist, other_dist, desired_distance, tolerance, center=None):
+	def weighted_random_choice(self, weighted_choices):
+		total = sum(weight for _, weight in weighted_choices)
+		if total <= 0:
+			return None
+		target = random.random() * total
+		for choice, weight in weighted_choices:
+			if target < weight:
+				return choice
+			target -= weight
+		return weighted_choices[-1][0]
+
+	def fair_city_weight(self, pos, own_dist, other_dist, desired_distance, center=None):
+		x, y = pos
+		d = own_dist[x][y]
+		if d < 2:
+			return 0
+		od = other_dist[x][y]
+		if od != -1 and od + 5 < d:
+			return 0
+		fairness = max(0.0, min(1.0, self.city_fairness))
+		distance_scale = 1.5 + 5.0 * (1.0 - fairness)
+		weight = math.exp(-abs(d - desired_distance) / distance_scale)
+		if od != -1:
+			enemy_advantage = max(0, d - od)
+			weight *= math.exp(-enemy_advantage * (0.18 + 0.38 * fairness))
+		if center is not None:
+			cluster_distance = self.manhattan(pos, center)
+			cluster_scale = 2.0 + 3.5 * (1.0 - fairness)
+			weight *= math.exp(-cluster_distance / cluster_scale)
+		return weight * (0.65 + random.random() * 0.7)
+
+	def fair_city_choices(self, candidates, own_dist, other_dist, desired_distance, center=None, banned=None):
+		if banned is None:
+			banned = set()
 		choices = []
-		for x, y in candidates:
-			d = own_dist[x][y]
-			if d < 2 or abs(d - desired_distance) > tolerance:
+		for pos in candidates:
+			if pos in banned:
 				continue
-			od = other_dist[x][y]
-			if od != -1 and od + 2 < d:
-				continue
-			if center is not None and self.manhattan((x, y), center) > 3:
-				continue
-			choices.append((x, y))
+			weight = self.fair_city_weight(pos, own_dist, other_dist, desired_distance, center)
+			if weight > 0:
+				choices.append((pos, weight))
 		return choices
 
-	def choose_fair_city_pair(self, dist0, dist1, desired_distance, tolerance, center0=None, center1=None):
+	def choose_fair_city_pair(self, dist0, dist1, desired_distance, center0=None, center1=None):
 		candidates = self.neutral_city_candidates()
 		if len(candidates) < 2:
 			return None
-		a_choices = self.fair_city_choices(candidates, dist0, dist1, desired_distance, tolerance, center0)
-		b_choices = self.fair_city_choices(candidates, dist1, dist0, desired_distance, tolerance, center1)
-		if not a_choices or not b_choices:
+		a_choices = self.fair_city_choices(candidates, dist0, dist1, desired_distance, center0)
+		a = self.weighted_random_choice(a_choices)
+		if a is None:
 			return None
-		a = random.choice(a_choices)
-		b_choices = [pos for pos in b_choices if pos != a]
+		b_choices = self.fair_city_choices(candidates, dist1, dist0, desired_distance, center1, {a})
 		if not b_choices:
 			return None
-		return a, random.choice(b_choices)
+		b = self.weighted_random_choice(b_choices)
+		return (a, b) if b is not None else None
 
 	def place_fair_two_team_cities(self, target_count):
 		if len(self.active_teams) != 2 or target_count < 2:
@@ -757,8 +786,7 @@ class Game:
 			return 0
 		dist0 = self.distance_map_many(g0)
 		dist1 = self.distance_map_many(g1)
-		tolerance = max(1, int(math.ceil(4 - 3 * self.city_fairness)))
-		max_city_distance = max(8, min(max(self.n, self.m), 18))
+		max_city_distance = max(8, min(self.n + self.m, int(max(self.n, self.m) * 0.65)))
 		placed = 0
 		placed_pairs = 0
 		attempts = 0
@@ -768,12 +796,14 @@ class Game:
 		cluster_distance = None
 		while placed_pairs < pair_count and attempts < pair_count * 140:
 			attempts += 1
-			desired_distance = cluster_distance if cluster_left > 0 else random.randint(2, max_city_distance)
+			if cluster_left > 0:
+				desired_distance = max(2, cluster_distance + random.randint(-2, 2))
+			else:
+				desired_distance = random.randint(2, max_city_distance)
 			pair = self.choose_fair_city_pair(
 				dist0,
 				dist1,
 				desired_distance,
-				tolerance,
 				cluster0 if cluster_left > 0 else None,
 				cluster1 if cluster_left > 0 else None,
 			)
@@ -795,7 +825,7 @@ class Game:
 				cluster_left -= 1
 				cluster0 = a
 				cluster1 = b
-			elif placed_pairs < pair_count and random.random() < 0.65 * self.city_fairness:
+			elif placed_pairs < pair_count and random.random() < 0.35 * self.city_fairness:
 				cluster_left = random.randint(1, min(2, pair_count - placed_pairs))
 				cluster0 = a
 				cluster1 = b
